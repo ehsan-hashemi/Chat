@@ -21,3 +21,25 @@
 ]
 
 }
+
+{
+  
+  "app":
+  
+  "ehsan-hashemi-615716",
+  
+  "port": 
+  
+  3000,
+  
+  "build":{
+    
+    "location": 
+    
+    "iran"
+    
+  },
+  
+  "disks": [],
+  "root": "backend"
+}
