@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>چت احسان - ورود و ثبت‌نام</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="/logo.png">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div id="logo-container">
+            <img src="logo.png" class="logo" alt="چت احسان" id="logo">
+            <h1>چت احسان</h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div id="auth-container">
+            <div class="auth-box" id="login-box">
+                <h2>ورود</h2>
+                <form id="login-form">
+                    <label for="login-id">آیدی (نام کاربری) یا ایمیل/شماره تلفن:</label>
+                    <input type="text" id="login-id" name="login-id" required placeholder="آیدی، ایمیل یا شماره تلفن خود را وارد کنید">
+                    <label for="login-password">رمز عبور:</label>
+                    <input type="password" id="login-password" name="login-password" required placeholder="رمز عبور خود را وارد کنید">
+                    <button type="submit" id="login-btn">ورود</button>
+                </form>
+                <p>حساب کاربری ندارید؟ <a href="#signup-form" id="to-signup">ثبت‌نام کنید</a></p>
+            </div>
+
+            <div class="auth-box" id="signup-box">
+                <h2>ثبت‌نام</h2>
+                <form id="signup-form">
+                    <label for="lastName">نام:</label>
+                    <input type="text" name="lastName" id="lastName" required placeholder="نام خود را وارد کنید">
+                    <label for="lastName">نام خانوادگی:</label>
+                    <input type="text" name="lastName" id="lastName" required placeholder="نام خانوداگی خود را وارد کنید">
+                    <label for="signup-username">نام کاربری:</label>
+                    <input type="text" id="signup-username" name="signup-username" required placeholder="نام کاربری خود را وارد کنید" pattern="[a-zA-Z0-9_]+">
+                    <label for="signup-email">ایمیل:</label>
+                    <input type="email" id="signup-email" name="signup-email" required placeholder="ایمیل خود را وارد کنید">
+                    <label for="signup-phone">شماره تلفن:</label>
+                    <input type="tel" id="signup-phone" name="signup-phone" required placeholder="شماره تلفن خود را وارد کنید">
+                    <label for="signup-password">رمز عبور:</label>
+                    <input type="password" id="signup-password" name="signup-password" required placeholder="رمز عبور خود را وارد کنید">
+                    <button type="submit" id="signup-btn">ثبت‌نام</button>
+                </form>
+                <p>حساب کاربری دارید؟ <a href="#login-form" id="to-login">ورود کنید</a></p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer>
+        <p>&copy; 2025 چت احسان. تمامی حقوق محفوظ است.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+@import
+url('https://cdn.fontcdn.ir/Font/Persian/Vazir/Vazir.css');
+
+/* تنظیمات عمومی صفحه */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Vazir', sans-serif;
+}
+
+body {
+    background-color: #f4f4f4;
+    color: #333;
+    font-size: 16px;
+    direction: rtl; /* برای نمایش متنی به زبان فارسی */
+}
+
+/* هدر */
+header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin: 0;
+}
+
+header img.logo {
+    height: 100px;
+    max-width: 140px;
+    object-fit: contain;
+}
+
+/* فرم ورود و ثبت‌نام */
+.auth-box {
+    background-color: white;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.auth-box label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.auth-box input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.auth-box button {
+    width: 100%;
+    padding: 12px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.auth-box button:hover {
+    background-color: #45a049;
+}
+
+.auth-box p {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.auth-box a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+/* Footer */
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px;
+}
+
+/* صفحات مختلف (چت و غیره) */
+#chat-container {
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.message-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f1f1f1;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background-color: #d3f9d8;
+}
+
+.message.received {
+    align-self: flex-start;
+    background-color: #f9f9f9;
+}
+
+/* انتخاب تم‌ها */
+body.green-theme {
+    background-color: #e0f7fa;
+}
+
+body.blue-theme {
+    background-color: #e1f5fe;
+}
+
+body.pink-theme {
+    background-color: #f8bbd0;
+}
+
+body.orange-theme {
+    background-color: #ffcc80;
+}
+
+body.yellow-theme {
+    background-color: #fff9c4;
+}
+
+body.white-theme {
+    background-color: white;
+}
+
+/* تنظیمات تم‌ها */
+#theme-selector {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.theme-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.theme-option.green {
+    background-color: #4CAF50;
+}
+
+.theme-option.blue {
+    background-color: #2196F3;
+}
+
+.theme-option.pink {
+    background-color: #E91E63;
+}
+
+.theme-option.orange {
+    background-color: #FF5722;
+}
+
+.theme-option.yellow {
+    background-color: #FFEB3B;
+}
+
+.theme-option.white {
+    background-color: white;
+}
