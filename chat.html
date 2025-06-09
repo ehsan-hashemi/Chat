@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چت روم حرفه‌ای</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <img id="currentUserProfilePic" src="" alt="You">
+                    <h4 id="currentUserName"></h4>
+                </div>
+                <button id="addContactBtn" title="افزودن مخاطب"><i class="fas fa-plus"></i></button>
+                <button id="settingsBtn" title="تنظیمات"><i class="fas fa-cog"></i></button>
+            </div>
+            <div id="contactList" class="contact-list">
+                </div>
+        </div>
+
+        <div class="chat-window">
+            <div id="welcomeScreen" class="welcome-screen">
+                <h2>به چت‌روم خوش آمدید!</h2>
+                <p>برای شروع یک مخاطب را از لیست انتخاب کنید.</p>
+            </div>
+            <div id="chatScreen" class="chat-screen" style="display: none;">
+                <div class="chat-header">
+                    <img id="contactProfilePic" src="" alt="">
+                    <h3 id="chattingWith"></h3>
+                </div>
+                <div id="messages" class="messages">
+                    </div>
+                <div class="chat-form-container">
+                    <form id="chatForm">
+                        <input id="msg" type="text" placeholder="پیام خود را بنویسید..." autocomplete="off">
+                        <label for="fileInput" class="attach-btn"><i class="fas fa-paperclip"></i></label>
+                        <input type="file" id="fileInput" style="display: none;" accept="image/*">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu">
+        <ul>
+            <li id="menu-rename">تغییر نام</li>
+            <li id="menu-change-contact-pic">تغییر عکس پروفایل</li> <li id="menu-delete-messages">حذف پیام‌ها</li>
+            <li id="menu-mark-read">علامت زدن به عنوان خوانده شده</li>
+            <li id="menu-delete-contact" class="danger">حذف مخاطب</li>
+        </ul>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>تنظیمات حساب کاربری</h2>
+            <form id="settingsForm" class="settings-form">
+                <div class="form-group">
+                    <label for="settingName">نام:</label>
+                    <input type="text" id="settingName" required>
+                </div>
+                <div class="form-group">
+                    <label for="settingPhone">شماره تلفن:</label>
+                    <input type="tel" id="settingPhone" pattern="09[0-9]{9}" required>
+                </div>
+                <div class="form-group">
+                    <label for="settingUserId">آیدی کاربری:</label>
+                    <input type="text" id="settingUserId" required>
+                </div>
+                <div class="form-group">
+                    <label for="settingProfilePic">عکس پروفایل:</label>
+                    <input type="file" id="settingProfilePic" accept="image/*">
+                    <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">اگر عکسی انتخاب نشود، از عکس پیش‌فرض استفاده می‌شود.</p>
+                </div>
+                <button type="submit" id="saveSettingsBtn">ذخیره تغییرات</button>
+            </form>
+            <div class="settings-options">
+                <button id="logoutBtn" class="danger">خروج از حساب</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
