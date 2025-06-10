@@ -63,11 +63,13 @@ body {
     font-size: 1rem;
     direction: rtl; /* برای راست‌چین */
     text-align: right; /* متن داخل ورودی هم از راست شروع شود */
+    font-family: 'Vazirmatn';
 }
 
 .login-container input[type="file"] {
     background-color: #f9f9f9;
     cursor: pointer;
+    font-family: 'Vazirmatn';
 }
 
 .login-container label {
@@ -342,6 +344,7 @@ body {
     font-size: 1rem;
     direction: rtl;
     text-align: right;
+    font-family: 'Vazirmatn';
 }
 
 #captionInput {
@@ -354,6 +357,7 @@ body {
     text-align: right;
     margin-top: -5px;
     margin-bottom: 5px;
+    font-family: 'Vazirmatn';
 }
 
 .chat-form-container .attach-btn {
@@ -529,18 +533,21 @@ body {
     flex-direction: column;
     gap: 15px;
     margin-bottom: 20px;
+    font-family: 'Vazirmatn';
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    font-family: 'Vazirmatn';
 }
 
 .form-group label {
     margin-bottom: 5px;
     font-weight: 500;
     color: var(--text-dark);
+    font-family: 'Vazirmatn';
 }
 
 .form-group input[type="text"],
@@ -552,6 +559,7 @@ body {
     font-size: 1rem;
     direction: rtl;
     text-align: right;
+    font-family: 'Vazirmatn';
 }
 
 .form-group input[type="file"] {
@@ -562,6 +570,7 @@ body {
     font-size: 0.9rem;
     background-color: #f9f9f9;
     cursor: pointer;
+    font-family: 'Vazirmatn';
 }
 
 .settings-options {
@@ -655,6 +664,7 @@ body {
         order: 1;
         width: calc(100% - 100px); /* Adjusted width */
         margin-left: 10px;
+        font-family: 'Vazirmatn';
     }
     .chat-form-container .attach-btn {
         order: 2;

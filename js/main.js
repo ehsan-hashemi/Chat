@@ -303,6 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `امروز ${now.toLocaleDateString('fa-IR')} هست.`;
             } else if (lowerCaseMsg.includes('کمک')) {
                 return 'چطور میتونم کمکتون کنم؟';
+            } else if (lowerCaseMsg.includes('چرا جواب نمیدی؟')) {
+                return 'چته خب. دارم جواب میدم دیگه!'
+            } else if (lowerCaseMsg.includes('آی قلبم. وای قلبم. آی قلبم. واییی قلبم')) {
+                return 'قلبت چشه؟ اصلا به من چه!'
+            } else if (lowerCaseMsg.includes('بی ادب')) {
+                return 'خودت بی ادبی بی ...'
             }
             return 'متاسفانه پیام شما را متوجه نشدم. لطفا واضح‌تر بگویید.';
         }
