@@ -1,0 +1,1330 @@
+عالی شد.
+خب حالا بریم سراغ ساخت فرانت...
+
+ببین من از قبل اینا رو آماده کردم:
+
+/index.html:
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود به چت‌روم (نسخه محلی)</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2>ورود یا ثبت نام</h2>
+        <form id="loginForm">
+            <input type="text" id="name" placeholder="نام شما" required>
+            <input type="tel" id="phone" placeholder="شماره تلفن (مثال: 09123456789)" required pattern="09[0-9]{9}">
+            <input type="text" id="userId" placeholder="آیدی شما (مثال: @my_id)" required>
+            <label for="profilePic">عکس پروفایل (اختیاری):</label>
+            <input type="file" id="profilePic" accept="image/*">
+            <button type="submit">ورود به چت</button>
+            <p id="error-message" style="color: red;"></p>
+        </form>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+</html>
+
+/chat.html:
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چت روم حرفه‌ای</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <img id="currentUserProfilePic" src="" alt="You">
+                    <h4 id="currentUserName"></h4>
+                </div>
+                <button id="addContactBtn" title="افزودن مخاطب"><i class="fas fa-plus"></i></button>
+                <button id="settingsBtn" title="تنظیمات"><i class="fas fa-cog"></i></button>
+            </div>
+            <div id="contactList" class="contact-list">
+                </div>
+        </div>
+
+        <div class="chat-window">
+            <div id="welcomeScreen" class="welcome-screen">
+                <h2>به چت‌روم خوش آمدید!</h2>
+                <p>برای شروع یک مخاطب را از لیست انتخاب کنید.</p>
+            </div>
+            <div id="chatScreen" class="chat-screen" style="display: none;">
+                <div class="chat-header">
+                    <button id="backToContactsBtn" class="back-button"><i class="fas fa-arrow-right"></i></button>
+                    <img id="contactProfilePic" src="" alt="">
+                    <h3 id="chattingWith"></h3>
+                </div>
+                <div id="messages" class="messages">
+                    </div>
+                <div class="chat-form-container">
+                    <form id="chatForm">
+                        <input id="msg" type="text" placeholder="پیام خود را بنویسید..." autocomplete="off">
+                        <input type="text" id="captionInput" placeholder="کپشن (اختیاری)..." style="display: none;">
+                        <label for="fileInput" class="attach-btn"><i class="fas fa-paperclip"></i></label>
+                        <input type="file" id="fileInput" style="display: none;" accept="image/*">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu">
+        <ul>
+            <li id="menu-rename">تغییر نام</li>
+            <li id="menu-change-contact-pic">تغییر عکس پروفایل</li>
+            <li id="menu-delete-messages">حذف پیام‌ها</li>
+            <li id="menu-mark-read">علامت زدن به عنوان خوانده شده</li>
+            <li id="menu-delete-contact" class="danger">حذف مخاطب</li>
+        </ul>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>تنظیمات حساب کاربری</h2>
+            <form id="settingsForm" class="settings-form">
+                <div class="form-group">
+                    <label for="settingName">نام:</label>
+                    <input type="text" id="settingName" required>
+                </div>
+                <div class="form-group">
+                    <label for="settingPhone">شماره تلفن:</label>
+                    <input type="tel" id="settingPhone" pattern="09[0-9]{9}" required>
+                </div>
+                <div class="form-group">
+                    <label for="settingUserId">آیدی کاربری:</label>
+                    <input type="text" id="settingUserId" required>
+                </div>
+                <div class="form-group">
+                    <label for="settingProfilePic">عکس پروفایل:</label>
+                    <input type="file" id="settingProfilePic" accept="image/*">
+                    <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">اگر عکسی انتخاب نشود، از عکس پیش‌فرض استفاده می‌شود.</p>
+                </div>
+                <button type="submit" id="saveSettingsBtn">ذخیره تغییرات</button>
+            </form>
+            <div class="settings-options">
+                <button id="logoutBtn" class="danger">خروج از حساب</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
+
+/js/main.js:
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // عکس پروفایل پیش‌فرض - از یک URL معتبر استفاده شده است
+    const DEFAULT_AVATAR_URL = 'https://dbkhatam.ir/images/person_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.svg';
+
+    // شبیه‌سازی پایگاه داده در localStorage
+    const db = {
+        get: () => JSON.parse(localStorage.getItem('chatAppLocalDB_v2')) || { currentUser: null, contacts: [], messages: {} },
+        save: (data) => localStorage.setItem('chatAppLocalDB_v2', JSON.stringify(data)),
+    };
+
+    // تشخیص صفحه (لاگین یا چت)
+    if (document.querySelector('.login-container')) {
+        handleLoginPage();
+    } else if (document.querySelector('.chat-container')) {
+        handleChatPage();
+    }
+
+    // --- مدیریت صفحه لاگین ---
+    function handleLoginPage() {
+        const loginForm = document.getElementById('loginForm');
+        const profilePicInput = document.getElementById('profilePic');
+
+        // اگر کاربر قبلاً لاگین کرده باشد، مستقیم به صفحه چت می‌رود
+        if (db.get().currentUser) {
+            window.location.href = 'chat.html';
+            return;
+        }
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const userId = document.getElementById('userId').value;
+            const profilePicFile = profilePicInput.files[0];
+
+            const data = db.get();
+            data.currentUser = { name, phone, userId, profilePic: DEFAULT_AVATAR_URL }; // ابتدا با آواتار پیش‌فرض مقداردهی می‌شود
+
+            if (profilePicFile) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    data.currentUser.profilePic = event.target.result; // عکس انتخابی جایگزین می‌شود
+                    db.save(data);
+                    window.location.href = 'chat.html';
+                };
+                reader.readAsDataURL(profilePicFile);
+            } else {
+                db.save(data); // اگر عکسی انتخاب نشد، فقط نام و شماره را ذخیره می‌کند
+                window.location.href = 'chat.html';
+            }
+        });
+    }
+
+    // --- مدیریت صفحه چت ---
+    function handleChatPage() {
+        let data = db.get(); // دریافت آخرین وضعیت دیتابیس
+        let activeContactPhone = null; // شماره تلفن مخاطب فعال
+        let contextMenuContactPhone = null; // شماره تلفن مخاطب برای منوی راست کلیک
+
+        // اگر کاربری لاگین نکرده باشد، به صفحه لاگین هدایت می‌شود
+        if (!data.currentUser) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // انتخاب عناصر DOM
+        const chatContainer = document.querySelector('.chat-container');
+        const sidebar = document.querySelector('.sidebar');
+        const chatWindow = document.querySelector('.chat-window');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const chatScreen = document.getElementById('chatScreen');
+        const contactListEl = document.getElementById('contactList');
+        const messagesEl = document.getElementById('messages');
+        const chatForm = document.getElementById('chatForm');
+        const msgInput = document.getElementById('msg');
+        const fileInput = document.getElementById('fileInput');
+        const captionInput = document.getElementById('captionInput');
+        const contextMenu = document.getElementById('contextMenu');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeButton = settingsModal.querySelector('.close-button');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const backToContactsBtn = document.getElementById('backToContactsBtn');
+        const settingsForm = document.getElementById('settingsForm'); // اضافه شده برای فرم تنظیمات
+        const settingNameInput = document.getElementById('settingName'); // اضافه شده
+        const settingPhoneInput = document.getElementById('settingPhone'); // اضافه شده
+        const settingUserIdInput = document.getElementById('settingUserId'); // اضافه شده
+        const settingProfilePicInput = document.getElementById('settingProfilePic'); // اضافه شده
+
+        // NEW: اطمینان از اینکه مودال تنظیمات هنگام بارگذاری صفحه پنهان است
+        settingsModal.style.display = 'none';
+
+        // --- منطق منوی راست کلیک ---
+        function showContextMenu(e) {
+            e.preventDefault(); // جلوگیری از منوی راست کلیک پیش‌فرض مرورگر
+            contextMenuContactPhone = e.currentTarget.dataset.phone;
+            contextMenu.style.display = 'block';
+            // موقعیت منو را تنظیم می‌کند تا در کنار اشاره‌گر موس نمایش داده شود
+            // از right استفاده شده چون rtl هستیم
+            contextMenu.style.top = `${e.pageY}px`;
+            contextMenu.style.right = `${window.innerWidth - e.pageX}px`;
+        }
+
+        function hideContextMenu() {
+            contextMenu.style.display = 'none';
+            contextMenuContactPhone = null;
+        }
+        window.addEventListener('click', hideContextMenu); // کلیک در هر جای صفحه منو را می‌بندد
+
+        // رویدادهای مربوط به آیتم‌های منوی راست کلیک
+        document.getElementById('menu-rename').addEventListener('click', () => {
+            const contact = data.contacts.find(c => c.phone === contextMenuContactPhone);
+            if (!contact) return;
+            const newName = prompt("نام جدید را وارد کنید:", contact.name);
+            if (newName && newName.trim()) {
+                contact.name = newName.trim();
+                db.save(data);
+                renderEverything(); // رندر مجدد برای نمایش تغییرات
+            }
+        });
+
+        document.getElementById('menu-change-contact-pic').addEventListener('click', () => {
+            const contact = data.contacts.find(c => c.phone === contextMenuContactPhone);
+            if (!contact) return;
+
+            const tempFileInput = document.createElement('input');
+            tempFileInput.type = 'file';
+            tempFileInput.accept = 'image/*';
+            tempFileInput.style.display = 'none'; // مخفی کردن ورودی فایل
+
+            tempFileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        contact.profilePic = event.target.result;
+                        db.save(data);
+                        renderEverything(); // رندر مجدد برای نمایش تغییرات
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            tempFileInput.click(); // شبیه‌سازی کلیک روی ورودی فایل
+        });
+
+        document.getElementById('menu-delete-messages').addEventListener('click', () => {
+            if (confirm(`آیا از حذف تمام پیام‌های این مخاطب مطمئن هستید؟`)) {
+                data.messages[contextMenuContactPhone] = []; // حذف پیام‌ها
+                db.save(data);
+                if (activeContactPhone === contextMenuContactPhone) {
+                    renderMessages(activeContactPhone); // اگر این مخاطب فعال است، پیام‌ها را رندر کن
+                }
+            }
+        });
+
+        document.getElementById('menu-mark-read').addEventListener('click', () => {
+             // این تابع در حال حاضر فقط یک پیام نمایش می‌دهد، می‌توانید منطق واقعی را اضافه کنید
+             alert("پیام‌ها خوانده شده در نظر گرفته شدند.");
+             // برای اعمال تغییرات واقعی:
+             // const chatHistory = data.messages[contextMenuContactPhone] || [];
+             // chatHistory.forEach(msg => {
+             //     if (msg.type === 'received') msg.status = 'read';
+             // });
+             // db.save(data);
+             // renderEverything();
+        });
+
+        document.getElementById('menu-delete-contact').addEventListener('click', () => {
+            if (confirm(`آیا از حذف این مخاطب مطمئن هستید؟`)) {
+                data.contacts = data.contacts.filter(c => c.phone !== contextMenuContactPhone); // حذف مخاطب
+                delete data.messages[contextMenuContactPhone]; // حذف تاریخچه چت مخاطب
+                db.save(data);
+                if (activeContactPhone === contextMenuContactPhone) {
+                    activeContactPhone = null; // اگر مخاطب حذف شده، چت فعال را پاک کن
+                }
+                renderEverything(); // رندر مجدد برای نمایش تغییرات
+            }
+        });
+
+        // --- منطق رندر کردن UI ---
+        function renderContacts() {
+            contactListEl.innerHTML = ''; // پاک کردن لیست مخاطبین فعلی
+            data.contacts.forEach(contact => {
+                const contactDiv = document.createElement('div');
+                contactDiv.className = 'contact-item';
+                contactDiv.dataset.phone = contact.phone;
+                if (contact.phone === activeContactPhone) contactDiv.classList.add('active'); // هایلایت کردن مخاطب فعال
+
+                contactDiv.innerHTML = `<img src="${contact.profilePic || DEFAULT_AVATAR_URL}" alt="${contact.name}">
+                    <div class="contact-info"><h5>${contact.name}</h5><small>${contact.phone}</small></div>`;
+
+                contactDiv.addEventListener('click', () => {
+                    activeContactPhone = contact.phone;
+                    // پیام‌های دریافتی را به عنوان خوانده شده علامت‌گذاری می‌کند
+                    const chatHistory = data.messages[activeContactPhone] || [];
+                    chatHistory.forEach(msg => {
+                        if (msg.type === 'received') msg.status = 'read';
+                    });
+                    db.save(data);
+                    renderEverything(); // رندر مجدد کل UI برای نمایش چت فعال
+
+                    // برای حالت موبایل: مخفی کردن سایدبار و نمایش پنجره چت
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.add('hidden');
+                        chatWindow.classList.add('active');
+                    }
+                });
+
+                contactDiv.addEventListener('contextmenu', showContextMenu); // افزودن رویداد راست کلیک
+                contactListEl.appendChild(contactDiv);
+            });
+        }
+
+        function renderMessages(phone) {
+            messagesEl.innerHTML = ''; // پاک کردن پیام‌های فعلی
+            const chatHistory = data.messages[phone] || [];
+            chatHistory.forEach(appendMessage); // اضافه کردن تک تک پیام‌ها
+            messagesEl.scrollTop = messagesEl.scrollHeight; // اسکرول به پایین
+        }
+
+        function appendMessage(msg) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', msg.type); // اضافه کردن کلاس sent یا received
+
+            let contentHTML = '';
+            if (msg.fileContent) { // اگر پیام شامل فایل است
+                contentHTML = `<img src="${msg.fileContent}" alt="Sent image" />`;
+                if (msg.caption) {
+                    contentHTML += `<span class="caption">${msg.caption}</span>`;
+                }
+            } else { // اگر پیام فقط متن است
+                contentHTML = msg.text;
+            }
+
+            let ticksHTML = '';
+            if (msg.type === 'sent') { // فقط برای پیام‌های ارسالی تیک نمایش داده می‌شود
+                let tickClass = '';
+                switch (msg.status) {
+                    case 'read': tickClass = 'icon-read'; break;
+                    case 'delivered': tickClass = 'icon-delivered'; break;
+                    default: tickClass = 'icon-sent';
+                }
+                ticksHTML = `<div class="message-meta"><div class="message-ticks ${tickClass}"></div></div>`;
+            }
+
+            messageDiv.innerHTML = `<div>${contentHTML}</div>${ticksHTML}`;
+            messagesEl.appendChild(messageDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight; // اسکرول به پایین بعد از هر پیام
+        }
+
+        // تابع اصلی رندرینگ که کل UI را به‌روز می‌کند
+        function renderEverything() {
+            data = db.get(); // همیشه آخرین داده‌ها را برای رندر دریافت می‌کند
+            if (activeContactPhone) {
+                const contact = data.contacts.find(c => c.phone === activeContactPhone);
+                // اگر مخاطب فعال حذف شده باشد، activeContactPhone را null می‌کند
+                if (!contact) {
+                    activeContactPhone = null;
+                    renderEverything(); // فراخوانی مجدد برای نمایش صفحه خوش‌آمدگویی
+                    return;
+                }
+
+                welcomeScreen.style.display = 'none';
+                chatScreen.style.display = 'flex'; // نمایش صفحه چت
+                // NEW: بروزرسانی اطلاعات مخاطب در هدر چت
+                document.getElementById('chattingWith').textContent = contact.name;
+                document.getElementById('contactProfilePic').src = contact.profilePic || DEFAULT_AVATAR_URL;
+                renderMessages(activeContactPhone); // رندر پیام‌های مخاطب فعال
+            } else {
+                chatScreen.style.display = 'none'; // پنهان کردن صفحه چت
+                welcomeScreen.style.display = 'flex'; // نمایش صفحه خوش‌آمدگویی
+                // برای حالت موبایل: اگر چت فعال نیست، سایدبار را نمایش بده
+                if (window.innerWidth <= 768) {
+                     sidebar.classList.remove('hidden');
+                     chatWindow.classList.remove('active');
+                }
+            }
+            renderContacts(); // رندر لیست مخاطبین
+            // بروزرسانی اطلاعات کاربر فعلی در سایدبار
+            document.getElementById('currentUserName').textContent = data.currentUser.name;
+            document.getElementById('currentUserProfilePic').src = data.currentUser.profilePic || DEFAULT_AVATAR_URL;
+        }
+
+        // --- منطق پاسخ هوش مصنوعی ---
+        function generateAIResponse(userMessage) {
+            const lowerCaseMsg = userMessage.toLowerCase();
+            if (lowerCaseMsg.includes('سلام') || lowerCaseMsg.includes('درود')) {
+                return 'سلام! حال شما چطوره؟';
+            } else if (lowerCaseMsg.includes('خوبی؟') || lowerCaseMsg.includes('چطوری؟')) {
+                return 'من خوبم ممنون! شما چطورید؟';
+            } else if (lowerCaseMsg.includes('اسمت چیه؟') || lowerCaseMsg.includes('کی هستی؟')) {
+                return 'من یک هوش مصنوعی هستم و اسمی ندارم. من توسط شما ساخته شدم!';
+            } else if (lowerCaseMsg.includes('ممنون') || lowerCaseMsg.includes('متشکرم')) {
+                return 'خواهش می‌کنم!';
+            } else if (lowerCaseMsg.includes('خدانگهدار') || lowerCaseMsg.includes('بای') || lowerCaseMsg.includes('به امید دیدار')) {
+                return 'خدانگهدار! روز خوبی داشته باشید.';
+            } else if (lowerCaseMsg.includes('ساعت چنده؟')) {
+                const now = new Date();
+                return `ساعت الان ${now.getHours()}:${now.getMinutes()} هست.`;
+            } else if (lowerCaseMsg.includes('تاریخ چنده؟')) {
+                const now = new Date();
+                return `امروز ${now.toLocaleDateString('fa-IR')} هست.`;
+            } else if (lowerCaseMsg.includes('کمک')) {
+                return 'چطور میتونم کمکتون کنم؟';
+            } else if (lowerCaseMsg.includes('چرا جواب نمیدی؟')) {
+                return 'چته خب. دارم جواب میدم دیگه!'
+            } else if (lowerCaseMsg.includes('آی قلبم. وای قلبم. آی قلبم. واییی قلبم')) {
+                return 'قلبت چشه؟ اصلا به من چه!'
+            } else if (lowerCaseMsg.includes('بی ادب')) {
+                return 'خودت بی ادبی بی ...'
+            }
+            return 'متاسفانه پیام شما را متوجه نشدم. لطفا واضح‌تر بگویید.';
+        }
+
+
+        // --- رویدادهای اصلی ---
+
+        // افزودن مخاطب جدید
+        document.getElementById('addContactBtn').addEventListener('click', () => {
+            const name = prompt("نام مخاطب:");
+            const phone = prompt("شماره تلفن مخاطب (مثال: 09123456789):");
+            const phoneRegex = /^09[0-9]{9}$/;
+            if (name && phone && phoneRegex.test(phone)) {
+                if (data.contacts.some(c => c.phone === phone)) {
+                    alert("مخاطبی با این شماره تلفن از قبل وجود دارد.");
+                    return;
+                }
+                data.contacts.push({ name, phone, profilePic: DEFAULT_AVATAR_URL });
+                db.save(data);
+                renderContacts(); // فقط لیست مخاطبین را رندر کن
+            } else if (name || phone) {
+                alert("لطفا نام و شماره تلفن معتبر (مثال: 09123456789) را وارد کنید.");
+            }
+        });
+
+        // نمایش/پنهان کردن کادر کپشن برای فایل
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                captionInput.style.display = 'block';
+            } else {
+                captionInput.style.display = 'none';
+                captionInput.value = '';
+            }
+        });
+
+        // ارسال پیام یا فایل
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = msgInput.value.trim();
+            const caption = captionInput.value.trim();
+            const file = fileInput.files[0];
+
+            if (!activeContactPhone || (!text && !file)) return; // اگر مخاطبی انتخاب نشده یا پیام و فایلی نیست، ارسال نکن
+
+            let fileContent = null;
+            if (file) {
+                fileContent = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => resolve(event.target.result);
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const message = {
+                id: Date.now(),
+                type: 'sent',
+                text: text,
+                fileContent: fileContent,
+                caption: caption,
+                status: 'sent', // وضعیت اولیه
+                timestamp: new Date().toISOString()
+            };
+
+            if (!data.messages[activeContactPhone]) data.messages[activeContactPhone] = [];
+            data.messages[activeContactPhone].push(message);
+            db.save(data);
+            appendMessage(message); // بلافاصله پیام کاربر را نمایش بده
+
+            // پاک کردن فیلدها
+            msgInput.value = '';
+            fileInput.value = '';
+            captionInput.value = '';
+            captionInput.style.display = 'none';
+
+            // شبیه‌سازی تحویل پیام (مثال: تیک دوم)
+            setTimeout(() => {
+                const currentData = db.get(); // آخرین وضعیت دیتابیس را برای به‌روزرسانی بگیر
+                const msgToUpdate = currentData.messages[activeContactPhone].find(m => m.id === message.id);
+                if (msgToUpdate) {
+                    msgToUpdate.status = 'delivered';
+                    db.save(currentData);
+                    renderEverything(); // رندر مجدد برای نمایش تیک دوم
+                }
+            }, 1000 + Math.random() * 500);
+
+            // شبیه‌سازی پاسخ از طرف هوش مصنوعی
+            setTimeout(() => {
+                const aiMessageText = text || (file ? 'یک فایل ارسال شد' : ''); // اگر متنی نبود و فایل بود
+                const replyText = generateAIResponse(aiMessageText); // فراخوانی تابع هوش مصنوعی
+                const replyMessage = {
+                    id: Date.now() + 1,
+                    type: 'received',
+                    text: replyText,
+                    status: 'sent', // وضعیت پیام دریافتی (می‌توانید 'read' یا 'received' هم بگذارید)
+                    timestamp: new Date().toISOString()
+                };
+                const updatedData = db.get(); // آخرین وضعیت دیتابیس را برای اضافه کردن پیام AI بگیر
+                if (!updatedData.messages[activeContactPhone]) updatedData.messages[activeContactPhone] = [];
+                updatedData.messages[activeContactPhone].push(replyMessage);
+                db.save(updatedData);
+                appendMessage(replyMessage); // بلافاصله پیام AI را نمایش بده
+                // نیازی به renderEverything() نیست چون appendMessage اسکرول می‌کند.
+            }, 2000 + Math.random() * 1500); // تاخیر تصادفی برای طبیعی‌تر شدن
+        });
+
+        // --- رویدادهای مودال تنظیمات ---
+        settingsBtn.addEventListener('click', () => {
+            // پر کردن فیلدهای فرم با اطلاعات فعلی کاربر
+            settingNameInput.value = data.currentUser.name;
+            settingPhoneInput.value = data.currentUser.phone;
+            settingUserIdInput.value = data.currentUser.userId;
+            settingProfilePicInput.value = ''; // خالی کردن فیلد انتخاب فایل برای هر بار باز شدن
+
+            settingsModal.style.display = 'flex'; // نمایش مودال (به صورت فلکس برای مرکزیت)
+        });
+
+        closeButton.addEventListener('click', () => {
+            settingsModal.style.display = 'none'; // مخفی کردن مودال
+        });
+
+        // بستن مودال با کلیک در خارج از آن
+        window.addEventListener('click', (event) => {
+            if (event.target == settingsModal) {
+                settingsModal.style.display = 'none';
+            }
+        });
+
+        // ذخیره تغییرات تنظیمات
+        settingsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const newName = settingNameInput.value.trim();
+            const newPhone = settingPhoneInput.value.trim();
+            const newUserId = settingUserIdInput.value.trim();
+            const newProfilePicFile = settingProfilePicInput.files[0];
+
+            const phoneRegex = /^09[0-9]{9}$/;
+            if (!newName || !newPhone || !newUserId || !phoneRegex.test(newPhone)) {
+                alert("لطفاً تمامی فیلدها را با اطلاعات معتبر پر کنید (شماره تلفن مثال: 09123456789).");
+                return;
+            }
+
+            // به‌روزرسانی اطلاعات کاربر
+            data.currentUser.name = newName;
+            data.currentUser.phone = newPhone;
+            data.currentUser.userId = newUserId;
+
+            if (newProfilePicFile) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    data.currentUser.profilePic = event.target.result;
+                    db.save(data);
+                    alert("تغییرات با موفقیت ذخیره شد!");
+                    settingsModal.style.display = 'none'; // مخفی کردن مودال
+                    renderEverything(); // رندر مجدد صفحه برای نمایش اطلاعات جدید کاربر
+                };
+                reader.readAsDataURL(newProfilePicFile);
+            } else {
+                db.save(data);
+                alert("تغییرات با موفقیت ذخیره شد!");
+                settingsModal.style.display = 'none'; // مخفی کردن مودال
+                renderEverything(); // رندر مجدد صفحه
+            }
+        });
+
+        // خروج از حساب کاربری
+        logoutBtn.addEventListener('click', () => {
+             if(confirm("آیا میخواهید از حساب خود خارج شوید؟")) {
+                 localStorage.removeItem('chatAppLocalDB_v2'); // پاک کردن داده‌ها از localStorage
+                 window.location.href = 'index.html'; // برگشت به صفحه لاگین
+             }
+        });
+
+        // دکمه بازگشت برای حالت موبایل (از صفحه چت به لیست مخاطبین)
+        backToContactsBtn.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('hidden'); // نمایش سایدبار
+                chatWindow.classList.remove('active'); // مخفی کردن پنجره چت
+                activeContactPhone = null; // پاک کردن مخاطب فعال
+                renderEverything(); // رندر مجدد (که باعث نمایش صفحه خوش‌آمدگویی می‌شود)
+            }
+        });
+
+        // اولین اجرای برنامه هنگام بارگذاری صفحه
+        renderEverything();
+    }
+});
+
+/css/style.css:
+/*
+ * فونت وزیرمتن برای ظاهر بهتر فارسی
+ * می‌توانید این خط را با فونت دلخواه خود جایگزین کنید یا به صورت لوکال فونت را اضافه کنید.
+*/
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
+
+:root {
+    --primary-color: #007bff;
+    --light-green-sent: #dcf8c6;
+    --white-received: #ffffff;
+    --background-grey: #f0f2f5;
+    --light-grey: #eeeeee;
+    --border-grey: #dddddd;
+    --text-dark: #333333;
+    --text-light: #666666;
+}
+
+/* --- استایل‌های عمومی --- */
+body {
+    font-family: 'Vazirmatn', sans-serif;
+    background-color: var(--background-grey);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden; /* جلوگیری از اسکرول کل صفحه */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* --- صفحه لاگین --- */
+.login-container {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.login-container h2 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.login-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.login-container input[type="text"],
+.login-container input[type="tel"],
+.login-container input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-grey);
+    border-radius: 5px;
+    font-size: 1rem;
+    direction: rtl; /* برای راست‌چین */
+    text-align: right; /* متن داخل ورودی هم از راست شروع شود */
+    font-family: 'Vazirmatn';
+}
+
+.login-container input[type="file"] {
+    background-color: #f9f9f9;
+    cursor: pointer;
+    font-family: 'Vazirmatn';
+}
+
+.login-container label {
+    align-self: flex-end; /* لیبل را به سمت راست هدایت می‌کند */
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: -10px; /* برای نزدیک‌تر کردن به فیلد */
+}
+
+.login-container button {
+    padding: 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-container button:hover {
+    background-color: #0056b3;
+}
+
+/* --- صفحه چت --- */
+.chat-container {
+    display: flex;
+    width: 95%;
+    height: 95vh;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 350px;
+    border-left: 1px solid var(--border-grey);
+    display: flex;
+    flex-direction: column;
+    background-color: var(--light-grey);
+    overflow: hidden;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: var(--primary-color);
+    color: white;
+    gap: 10px;
+    border-bottom: 1px solid #0056b3;
+    position: relative;
+    z-index: 10;
+}
+
+.sidebar-header .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.sidebar-header .user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+}
+
+.sidebar-header h4 {
+    margin: 0;
+    font-weight: 500;
+}
+
+.sidebar-header button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+
+.sidebar-header button:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+.contact-list {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-grey);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    background-color: white;
+}
+
+.contact-item:hover {
+    background-color: var(--light-grey);
+}
+
+.contact-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.contact-item.active .contact-info small {
+    color: white;
+}
+
+.contact-item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-left: 15px;
+}
+
+.contact-info {
+    flex-grow: 1;
+    text-align: right;
+}
+
+.contact-info h5 {
+    margin: 0 0 5px 0;
+    font-weight: 500;
+}
+
+.contact-info small {
+    color: var(--text-light);
+}
+
+.chat-window {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    /* Ensure it takes full height to correctly position chat-screen */
+    height: 100%; /* NEW: Added height */
+}
+
+.welcome-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--text-light);
+    text-align: center;
+}
+
+.chat-screen {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* NEW: Added flex-grow */
+    background-color: var(--background-grey);
+    height: 100%; /* NEW: Ensure it takes full height */
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: var(--primary-color);
+    color: white;
+    gap: 10px;
+    border-bottom: 1px solid #0056b3;
+    position: relative;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 15px;
+    display: none;
+}
+
+.chat-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+    margin-left: 10px;
+}
+
+.chat-header h3 {
+    margin: 0;
+    font-weight: 500;
+    flex-grow: 1;
+    text-align: right;
+}
+
+.messages {
+    flex-grow: 1; /* NEW: Ensure messages take available space */
+    padding: 20px;
+    overflow-y: auto; /* Scroll for messages */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-image: url('https://web.whatsapp.com/img/bg-chat-tile-light_6ad68e73307567780005.png');
+    background-repeat: repeat;
+}
+
+.message {
+    max-width: 70%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+    word-wrap: break-word;
+    line-height: 1.4;
+    position: relative;
+}
+
+/* برای پیام‌های ارسالی من */
+.message.sent {
+    background-color: var(--light-green-sent); /* رنگ پس‌زمینه پیام‌های ارسالی */
+    align-self: flex-start; /* **تغییر از flex-end به flex-start** - پیام به سمت چپ می‌رود */
+}
+
+/* برای پیام‌های دریافتی از مخاطب */
+.message.received {
+    background-color: var(--white-received); /* رنگ پس‌زمینه پیام‌های دریافتی */
+    align-self: flex-end; /* **تغییر از flex-start به flex-end** - پیام به سمت راست می‌رود */
+}
+
+.message img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
+
+.message .caption {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    margin-top: 5px;
+    text-align: right;
+}
+
+.chat-form-container {
+    padding: 15px;
+    background-color: white;
+    border-top: 1px solid var(--border-grey);
+    flex-shrink: 0; /* NEW: Prevent form from shrinking */
+}
+
+.chat-form-container form {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.chat-form-container input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid var(--border-grey);
+    border-radius: 20px;
+    font-size: 1rem;
+    direction: rtl;
+    text-align: right;
+    font-family: 'Vazirmatn';
+}
+
+#captionInput {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-grey);
+    border-radius: 15px;
+    font-size: 0.9rem;
+    direction: rtl;
+    text-align: right;
+    margin-top: -5px;
+    margin-bottom: 5px;
+    font-family: 'Vazirmatn';
+}
+
+.chat-form-container .attach-btn {
+    background-color: var(--light-grey);
+    color: var(--text-dark);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+
+.chat-form-container .attach-btn:hover {
+    background-color: var(--border-grey);
+}
+
+.chat-form-container button[type="submit"] {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+
+.chat-form-container button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* --- Context Menu --- */
+.context-menu {
+    display: none;
+    position: absolute;
+    background-color: white;
+    border: 1px solid var(--border-grey);
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+    min-width: 150px;
+    direction: rtl;
+}
+
+.context-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.context-menu ul li {
+    padding: 10px 15px;
+    cursor: pointer;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
+.context-menu ul li:hover {
+    background-color: var(--light-grey);
+}
+.context-menu ul li.danger {
+    color: #dc3545;
+}
+.context-menu ul li.danger:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* --- Status Ticks --- */
+.message-meta {
+    display: flex;
+    align-items: center;
+    font-size: 0.7rem;
+    color: #aaa;
+    margin-right: auto;
+}
+
+.message.sent .message-meta {
+    margin-left: auto;
+    margin-right: 0;
+}
+
+.message-ticks {
+    margin-left: 5px;
+    width: 16px;
+    height: 16px;
+}
+
+.icon-sent {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+.icon-delivered {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3Cpolyline points='15 6 9 12 4 7'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+.icon-read {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007bff' stroke='%23007bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3Cpolyline points='15 6 9 12 4 7'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+}
+
+/* --- Settings Modal Styles --- */
+.modal {
+    display: none; /* Changed to none by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 450px;
+    position: relative;
+    text-align: center;
+}
+
+.modal-content h2 {
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: var(--text-dark);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+    font-family: 'Vazirmatn';
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-family: 'Vazirmatn';
+}
+
+.form-group label {
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--text-dark);
+    font-family: 'Vazirmatn';
+}
+
+.form-group input[type="text"],
+.form-group input[type="tel"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-grey);
+    border-radius: 5px;
+    font-size: 1rem;
+    direction: rtl;
+    text-align: right;
+    font-family: 'Vazirmatn';
+}
+
+.form-group input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-grey);
+    border-radius: 5px;
+    font-size: 0.9rem;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    font-family: 'Vazirmatn';
+}
+
+.settings-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.settings-options button,
+#saveSettingsBtn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-family: inherit;
+    transition: background-color 0.2s;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.settings-options button.danger {
+    background-color: #dc3545;
+}
+
+.settings-options button:hover,
+#saveSettingsBtn:hover {
+    opacity: 0.9;
+}
+.settings-options button.danger:hover {
+    background-color: #c82333;
+}
+
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    body {
+        height: 100vh;
+        align-items: stretch;
+        justify-content: flex-start;
+        padding: 0;
+    }
+
+    .chat-container {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .sidebar {
+        width: 100%;
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        z-index: 20;
+        transition: transform 0.3s ease-out;
+        transform: translateX(0);
+    }
+
+    .sidebar.hidden {
+        transform: translateX(100%);
+    }
+
+    .chat-window {
+        width: 100%;
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        z-index: 10;
+        display: none; /* Hidden by default */
+    }
+
+    .chat-window.active {
+        display: flex;
+        z-index: 25;
+    }
+
+    .chat-header .back-button {
+        display: block;
+    }
+
+    .chat-form-container form {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .chat-form-container input[type="text"] { /* This applies to #msg input */
+        order: 1;
+        width: calc(100% - 100px); /* Adjusted width */
+        margin-left: 10px;
+        font-family: 'Vazirmatn';
+    }
+    .chat-form-container .attach-btn {
+        order: 2;
+        margin-left: 5px;
+    }
+    .chat-form-container button[type="submit"] {
+        order: 3;
+    }
+    #captionInput {
+        order: 4;
+        width: 100%;
+        margin-top: 10px;
+        margin-left: 0;
+    }
+}
+
+پس اینا شد:
+
+هاست (برای نمایش فرانت):‌ Git Hub Pages
+سرور: Python Flask (Liara)
+دیتابیس: Maridb (Liara)
+
+حالا طبق کد هایی که دادم، همه چیزا رو به بهترین شکل درست کن و جوری بکن که به سرور متصل بشه. بعد هم کد های سرور رو برام بفرست.
+راستی تو این نسخه امکان ارسال عکس و فیلم و هر فایلی فقط تا سقف ۱ مگابایت مجاز باشه و هر کاربر بیشتر از ۲۰ مگابایت نتونه ارسال بکنه. اینا به خاطر اینکه دیتابیس پر نشه.
+راستی لوگوی ایچت تو مسیر /icon.png هست.
+تم اپلیکیشن هم سبز و سفید بکن.
+و اینکه قابلیت های تغییر پروفایل مخاطب نباشه. عکس های پروفایل هر کسی هم خودش بذاره. برای لاگین کردنم اصلا شماره تلفن و آیدی تکراری نباشه.
+استایل ها همونایی که گفتم باشه فقط بیشتر بشه و بهتر و اینکه تمش تغییر کنه.
+هر جایی @ تو پیام ها ارسال شد، تبدیل به لینک بشه و وقتی روش زده میشه بره تو صفحه چت اون طرف.
+همه یوزر ها وقتی لاگین میکنن، یه آیدی بهشون داده بشه.
+خلاصه باید مثل پیامراسن های دیگه باشه. فقط حواست باشه لاگین و ارسال و رسیدن پیام ها باید درست درست انجام بشه.
+از قبل هم یه یوزر با تیک آبی به نام پشتیبانی با آیدی @support باشه با شماره تلفن 09000000000 با پسورد 1392ehsan که پشتیبانی با تیک رسمی باشه و برای ارسال پیام به یوزرا استفاده بشه. یوزر پشتیبانی وقتی به شماره تلفن 09010000000 پیامی ارسال کرد، برای همه یوزر های لاگین کرده اون پیام ارسال بشه.
+راستی به جز لینک سدن آیدی ها، با ارسال مثلا پیام ehsanpg.ir، اون پیام به لینک تبدیل بشه
+
+خب حالا فرانت رو فعلا بازسازی کن و درست درستش کن. یعنی مثل همونی که دادم باشه ولی خیلی بهتر با اتصال به سرور. بساز و به صورت عالی عالی بهم بده...

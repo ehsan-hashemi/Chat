@@ -1,191 +1,218 @@
-/*
- * فونت وزیرمتن برای ظاهر بهتر فارسی
- * می‌توانید این خط را با فونت دلخواه خود جایگزین کنید یا به صورت لوکال فونت را اضافه کنید.
-*/
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
 
 :root {
-    --primary-color: #007bff;
-    --light-green-sent: #dcf8c6;
-    --white-received: #ffffff;
-    --background-grey: #f0f2f5;
-    --light-grey: #eeeeee;
-    --border-grey: #dddddd;
-    --text-dark: #333333;
-    --text-light: #666666;
-}
-
-/* --- استایل‌های عمومی --- */
-body {
-    font-family: 'Vazirmatn', sans-serif;
-    background-color: var(--background-grey);
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden; /* جلوگیری از اسکرول کل صفحه */
+    --primary-color: #25D366;
+    --primary-dark: #128C7E;
+    --primary-light: #DCFFF0;
+    --background-color: #f0f2f5;
+    --surface-color: #ffffff;
+    --text-primary: #2A2A2A;
+    --text-secondary: #666666;
+    --text-light: #888888;
+    --border-color: #e0e0e0;
+    --shadow: 0 2px 10px rgba(0,0,0,0.1);
+    --success-color: #4CAF50;
+    --warning-color: #FF9800;
+    --error-color: #f44336;
 }
 
 * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
+    font-family: "Vazirmatn";
 }
 
-/* --- صفحه لاگین --- */
+body {
+    font-family: 'Vazirmatn', sans-serif;
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--surface-color) 100%);
+    direction: rtl;
+}
+
+/* صفحه ورود */
 .login-container {
-    background: white;
-    padding: 2rem 2.5rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    width: 100%;
+    background: var(--surface-color);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    width: 90%;
     max-width: 400px;
+    margin: 2rem auto;
     text-align: center;
 }
 
-.login-container h2 {
-    color: var(--primary-color);
+.logo {
     margin-bottom: 1.5rem;
+}
+
+.logo img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+}
+
+.logo h1 {
+    color: var(--primary-dark);
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.login-container h2 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-weight: 500;
 }
 
 .login-container form {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 1rem;
 }
 
-.login-container input[type="text"],
-.login-container input[type="tel"],
-.login-container input[type="file"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-grey);
-    border-radius: 5px;
+.login-container input {
+    padding: 12px 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
     font-size: 1rem;
-    direction: rtl; /* برای راست‌چین */
-    text-align: right; /* متن داخل ورودی هم از راست شروع شود */
     font-family: 'Vazirmatn';
+    transition: all 0.3s ease;
 }
 
-.login-container input[type="file"] {
-    background-color: #f9f9f9;
-    cursor: pointer;
-    font-family: 'Vazirmatn';
-}
-
-.login-container label {
-    align-self: flex-end; /* لیبل را به سمت راست هدایت می‌کند */
-    font-size: 0.9rem;
-    color: var(--text-light);
-    margin-bottom: -10px; /* برای نزدیک‌تر کردن به فیلد */
+.login-container input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
 }
 
 .login-container button {
-    padding: 12px;
-    background-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
     border: none;
-    border-radius: 5px;
+    padding: 12px;
+    border-radius: 10px;
     font-size: 1.1rem;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .login-container button:hover {
-    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3);
 }
 
-/* --- صفحه چت --- */
+/* صفحه چت */
 .chat-container {
     display: flex;
-    width: 95%;
-    height: 95vh;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    overflow: hidden;
+    height: 100vh;
+    background: var(--surface-color);
+    box-shadow: var(--shadow);
 }
 
+/* سایدبار */
 .sidebar {
     width: 350px;
-    border-left: 1px solid var(--border-grey);
+    background: var(--surface-color);
+    border-left: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    background-color: var(--light-grey);
-    overflow: hidden;
 }
 
 .sidebar-header {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    background-color: var(--primary-color);
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
     color: white;
-    gap: 10px;
-    border-bottom: 1px solid #0056b3;
-    position: relative;
-    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.sidebar-header .user-profile {
+.user-profile {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-grow: 1;
 }
 
-.sidebar-header .user-profile img {
-    width: 40px;
-    height: 40px;
+.user-profile img {
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
-    object-fit: cover;
     border: 2px solid white;
 }
 
-.sidebar-header h4 {
+.user-info h4 {
     margin: 0;
     font-weight: 500;
 }
 
-.sidebar-header button {
-    background: none;
+.user-info small {
+    opacity: 0.8;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.header-buttons button {
+    background: rgba(255,255,255,0.2);
     border: none;
     color: white;
-    font-size: 1.2rem;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
     cursor: pointer;
-    padding: 5px;
-    border-radius: 5px;
-    transition: background-color 0.2s;
+    transition: all 0.3s ease;
 }
 
-.sidebar-header button:hover {
-    background-color: rgba(255,255,255,0.2);
+.header-buttons button:hover {
+    background: rgba(255,255,255,0.3);
 }
 
+/* جستجو */
+.search-container {
+    position: relative;
+    padding: 1rem;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-family: 'Vazirmatn';
+}
+
+.search-container i {
+    position: absolute;
+    left: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+}
+
+/* لیست مخاطبین */
 .contact-list {
-    flex-grow: 1;
+    flex: 1;
     overflow-y: auto;
 }
 
 .contact-item {
     display: flex;
     align-items: center;
-    padding: 15px;
-    border-bottom: 1px solid var(--border-grey);
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
-    transition: background-color 0.2s;
-    background-color: white;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .contact-item:hover {
-    background-color: var(--light-grey);
+    background: var(--primary-light);
 }
 
 .contact-item.active {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.contact-item.active .contact-info small {
+    background: var(--primary-color);
     color: white;
 }
 
@@ -193,13 +220,11 @@ body {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    object-fit: cover;
-    margin-left: 15px;
+    margin-left: 1rem;
 }
 
 .contact-info {
-    flex-grow: 1;
-    text-align: right;
+    flex: 1;
 }
 
 .contact-info h5 {
@@ -209,474 +234,338 @@ body {
 
 .contact-info small {
     color: var(--text-light);
+    font-size: 0.8rem;
 }
 
+.verified-badge {
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+/* پنجره چت */
 .chat-window {
-    flex-grow: 1;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    position: relative;
-    /* Ensure it takes full height to correctly position chat-screen */
-    height: 100%; /* NEW: Added height */
+    background: var(--background-color);
 }
 
+/* صفحه خوش‌آمدگویی */
 .welcome-screen {
+    flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    color: var(--text-light);
     text-align: center;
+    color: var(--text-secondary);
 }
 
-.chat-screen {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1; /* NEW: Added flex-grow */
-    background-color: var(--background-grey);
-    height: 100%; /* NEW: Ensure it takes full height */
+.welcome-logo {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 2rem;
+    border-radius: 50%;
 }
 
+.welcome-screen h2 {
+    color: var(--primary-dark);
+    margin-bottom: 1rem;
+}
+
+/* هدر چت */
 .chat-header {
+    background: var(--surface-color);
+    padding: 1rem;
     display: flex;
     align-items: center;
-    padding: 15px;
-    background-color: var(--primary-color);
-    color: white;
-    gap: 10px;
-    border-bottom: 1px solid #0056b3;
-    position: relative;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .back-button {
     background: none;
     border: none;
-    color: white;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     cursor: pointer;
-    padding: 0;
-    margin-right: 15px;
+    color: var(--text-primary);
     display: none;
 }
 
 .chat-header img {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid white;
-    margin-left: 10px;
 }
 
-.chat-header h3 {
+.contact-info h3 {
     margin: 0;
     font-weight: 500;
-    flex-grow: 1;
-    text-align: right;
 }
 
-.messages {
-    flex-grow: 1; /* NEW: Ensure messages take available space */
-    padding: 20px;
-    overflow-y: auto; /* Scroll for messages */
+.contact-info small {
+    color: var(--text-light);
+}
+
+.chat-actions {
+    margin-right: auto;
     display: flex;
-    flex-direction: column;
     gap: 10px;
-    background-image: url('https://web.whatsapp.com/img/bg-chat-tile-light_6ad68e73307567780005.png');
-    background-repeat: repeat;
+}
+
+.chat-actions button {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.chat-actions button:hover {
+    color: var(--primary-color);
+}
+
+/* پیام‌ها */
+.messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.05"><path fill="%23128C7E" d="M30,30 Q50,10 70,30 T110,30 T150,30 T190,30 T230,30 T270,30 T310,30 T350,30 T390,30 T430,30 T470,30 T510,30 T550,30 T590,30 T630,30 T670,30 T710,30 T750,30 T790,30 T830,30 T870,30 T910,30 T950,30 T990,30 T1030,30 T1070,30 T1110,30 T1150,30 T1190,30"/></svg>');
 }
 
 .message {
     max-width: 70%;
-    padding: 10px 12px;
-    border-radius: 8px;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
-    word-wrap: break-word;
-    line-height: 1.4;
-    position: relative;
-}
-
-/* برای پیام‌های ارسالی من */
-.message.sent {
-    background-color: var(--light-green-sent); /* رنگ پس‌زمینه پیام‌های ارسالی */
-    align-self: flex-start; /* **تغییر از flex-end به flex-start** - پیام به سمت چپ می‌رود */
-}
-
-/* برای پیام‌های دریافتی از مخاطب */
-.message.received {
-    background-color: var(--white-received); /* رنگ پس‌زمینه پیام‌های دریافتی */
-    align-self: flex-end; /* **تغییر از flex-start به flex-end** - پیام به سمت راست می‌رود */
-}
-
-.message img {
-    max-width: 100%;
-    border-radius: 8px;
-    margin-bottom: 5px;
-}
-
-.message .caption {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-dark);
-    margin-top: 5px;
-    text-align: right;
-}
-
-.chat-form-container {
-    padding: 15px;
-    background-color: white;
-    border-top: 1px solid var(--border-grey);
-    flex-shrink: 0; /* NEW: Prevent form from shrinking */
-}
-
-.chat-form-container form {
+    margin-bottom: 1rem;
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+}
+
+.message.sent {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+.message.received {
+    align-self: flex-end;
     align-items: flex-end;
 }
 
-.chat-form-container input[type="text"] {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid var(--border-grey);
-    border-radius: 20px;
-    font-size: 1rem;
-    direction: rtl;
-    text-align: right;
-    font-family: 'Vazirmatn';
+.message-content {
+    padding: 12px 16px;
+    border-radius: 18px;
+    word-wrap: break-word;
+    line-height: 1.4;
 }
 
-#captionInput {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--border-grey);
-    border-radius: 15px;
-    font-size: 0.9rem;
-    direction: rtl;
-    text-align: right;
-    margin-top: -5px;
-    margin-bottom: 5px;
-    font-family: 'Vazirmatn';
-}
-
-.chat-form-container .attach-btn {
-    background-color: var(--light-grey);
-    color: var(--text-dark);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    flex-shrink: 0;
-}
-
-.chat-form-container .attach-btn:hover {
-    background-color: var(--border-grey);
-}
-
-.chat-form-container button[type="submit"] {
-    background-color: var(--primary-color);
+.message.sent .message-content {
+    background: var(--primary-color);
     color: white;
+    border-bottom-right-radius: 5px;
+}
+
+.message.received .message-content {
+    background: var(--surface-color);
+    color: var(--text-primary);
+    border-bottom-left-radius: 5px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.message-image {
+    max-width: 300px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+}
+
+.caption {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+.user-mention {
+    color: var(--primary-dark);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.user-mention:hover {
+    text-decoration: underline;
+}
+
+.message-time {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+.message-status {
+    color: var(--primary-dark);
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+/* فرم ارسال پیام */
+.chat-form-container {
+    background: var(--surface-color);
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.input-container input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 25px;
+    font-family: 'Vazirmatn';
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.input-container input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.chat-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.attach-btn, .send-btn {
+    width: 45px;
+    height: 45px;
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
     display: flex;
+    align-items: center;
     justify-content: center;
-    align-items: center;
-    font-size: 1.2rem;
     cursor: pointer;
-    transition: background-color 0.2s;
-    flex-shrink: 0;
+    transition: all 0.3s ease;
 }
 
-.chat-form-container button[type="submit"]:hover {
-    background-color: #0056b3;
+.attach-btn {
+    background: var(--background-color);
+    color: var(--text-light);
 }
 
-/* --- Context Menu --- */
-.context-menu {
-    display: none;
-    position: absolute;
-    background-color: white;
-    border: 1px solid var(--border-grey);
-    border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    z-index: 100;
-    min-width: 150px;
-    direction: rtl;
+.send-btn {
+    background: var(--primary-color);
+    color: white;
 }
 
-.context-menu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.attach-btn:hover, .send-btn:hover {
+    transform: scale(1.1);
 }
 
-.context-menu ul li {
-    padding: 10px 15px;
-    cursor: pointer;
-    color: var(--text-dark);
-    font-size: 0.95rem;
+.storage-info {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-top: 10px;
 }
 
-.context-menu ul li:hover {
-    background-color: var(--light-grey);
-}
-.context-menu ul li.danger {
-    color: #dc3545;
-}
-.context-menu ul li.danger:hover {
-    background-color: #dc3545;
-    color: #fff;
-}
-
-/* --- Status Ticks --- */
-.message-meta {
-    display: flex;
-    align-items: center;
-    font-size: 0.7rem;
-    color: #aaa;
-    margin-right: auto;
-}
-
-.message.sent .message-meta {
-    margin-left: auto;
-    margin-right: 0;
-}
-
-.message-ticks {
-    margin-left: 5px;
-    width: 16px;
-    height: 16px;
-}
-
-.icon-sent {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-}
-
-.icon-delivered {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3Cpolyline points='15 6 9 12 4 7'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-}
-
-.icon-read {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007bff' stroke='%23007bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3Cpolyline points='15 6 9 12 4 7'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-}
-
-/* --- Settings Modal Styles --- */
+/* مودال */
 .modal {
-    display: none; /* Changed to none by default */
+    display: none;
     position: fixed;
-    z-index: 1000;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
     justify-content: center;
     align-items: center;
 }
 
 .modal-content {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    background: var(--surface-color);
+    padding: 2rem;
+    border-radius: 15px;
     width: 90%;
-    max-width: 450px;
+    max-width: 400px;
     position: relative;
-    text-align: center;
-}
-
-.modal-content h2 {
-    color: var(--text-dark);
-    margin-bottom: 1.5rem;
 }
 
 .close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
     position: absolute;
-    top: 10px;
-    left: 15px;
+    left: 1rem;
+    top: 1rem;
+    font-size: 1.5rem;
     cursor: pointer;
+    color: var(--text-light);
 }
 
-.close-button:hover,
-.close-button:focus {
-    color: var(--text-dark);
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.settings-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-    font-family: 'Vazirmatn';
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    font-family: 'Vazirmatn';
-}
-
-.form-group label {
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: var(--text-dark);
-    font-family: 'Vazirmatn';
-}
-
-.form-group input[type="text"],
-.form-group input[type="tel"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-grey);
-    border-radius: 5px;
-    font-size: 1rem;
-    direction: rtl;
-    text-align: right;
-    font-family: 'Vazirmatn';
-}
-
-.form-group input[type="file"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-grey);
-    border-radius: 5px;
-    font-size: 0.9rem;
-    background-color: #f9f9f9;
-    cursor: pointer;
-    font-family: 'Vazirmatn';
-}
-
-.settings-options {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.settings-options button,
-#saveSettingsBtn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    font-family: inherit;
-    transition: background-color 0.2s;
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.settings-options button.danger {
-    background-color: #dc3545;
-}
-
-.settings-options button:hover,
-#saveSettingsBtn:hover {
-    opacity: 0.9;
-}
-.settings-options button.danger:hover {
-    background-color: #c82333;
-}
-
-
-/* --- Mobile Responsiveness --- */
+/* رسپانسیو */
 @media (max-width: 768px) {
-    body {
-        height: 100vh;
-        align-items: stretch;
-        justify-content: flex-start;
-        padding: 0;
-    }
-
     .chat-container {
-        width: 100%;
-        height: 100%;
-        border-radius: 0;
-        box-shadow: none;
+        height: 100vh;
     }
-
+    
     .sidebar {
         width: 100%;
         position: absolute;
-        top: 0;
-        right: 0;
-        height: 100%;
-        z-index: 20;
-        transition: transform 0.3s ease-out;
-        transform: translateX(0);
-    }
-
-    .sidebar.hidden {
-        transform: translateX(100%);
-    }
-
-    .chat-window {
-        width: 100%;
-        position: absolute;
-        top: 0;
-        right: 0;
-        height: 100%;
         z-index: 10;
-        display: none; /* Hidden by default */
     }
-
+    
+    .chat-window {
+        display: none;
+    }
+    
     .chat-window.active {
         display: flex;
-        z-index: 25;
     }
-
-    .chat-header .back-button {
+    
+    .back-button {
         display: block;
     }
+    
+    .message {
+        max-width: 85%;
+    }
+    
+    .modal-content {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+    }
+}
 
-    .chat-form-container form {
-        flex-wrap: wrap;
-        justify-content: flex-end;
-    }
-    .chat-form-container input[type="text"] { /* This applies to #msg input */
-        order: 1;
-        width: calc(100% - 100px); /* Adjusted width */
-        margin-left: 10px;
-        font-family: 'Vazirmatn';
-    }
-    .chat-form-container .attach-btn {
-        order: 2;
-        margin-left: 5px;
-    }
-    .chat-form-container button[type="submit"] {
-        order: 3;
-    }
-    #captionInput {
-        order: 4;
-        width: 100%;
-        margin-top: 10px;
-        margin-left: 0;
-    }
+/* انیمیشن‌ها */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message {
+    animation: fadeIn 0.3s ease;
+}
+
+.contact-item {
+    animation: fadeIn 0.2s ease;
+}
+
+/* اسکرول بار */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
 }

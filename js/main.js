@@ -1,498 +1,363 @@
-document.addEventListener('DOMContentLoaded', () => {
+const API_BASE_URL = 'https://echat.liara.run';
+const DEFAULT_AVATAR = 'https://echat.liara.run/icon.png';
 
-    // عکس پروفایل پیش‌فرض - از یک URL معتبر استفاده شده است
-    const DEFAULT_AVATAR_URL = 'https://dbkhatam.ir/images/person_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.svg';
-
-    // شبیه‌سازی پایگاه داده در localStorage
-    const db = {
-        get: () => JSON.parse(localStorage.getItem('chatAppLocalDB_v2')) || { currentUser: null, contacts: [], messages: {} },
-        save: (data) => localStorage.setItem('chatAppLocalDB_v2', JSON.stringify(data)),
-    };
-
-    // تشخیص صفحه (لاگین یا چت)
-    if (document.querySelector('.login-container')) {
-        handleLoginPage();
-    } else if (document.querySelector('.chat-container')) {
-        handleChatPage();
+class EChat {
+    constructor() {
+        this.currentUser = null;
+        this.contacts = [];
+        this.activeContact = null;
+        this.init();
     }
 
-    // --- مدیریت صفحه لاگین ---
-    function handleLoginPage() {
-        const loginForm = document.getElementById('loginForm');
-        const profilePicInput = document.getElementById('profilePic');
+    async init() {
+        this.checkAuth();
+        this.setupEventListeners();
+        
+        if (this.isChatPage()) {
+            await this.loadUserData();
+            await this.loadContacts();
+            this.renderContacts();
+        }
+    }
 
-        // اگر کاربر قبلاً لاگین کرده باشد، مستقیم به صفحه چت می‌رود
-        if (db.get().currentUser) {
-            window.location.href = 'chat.html';
-            return;
+    isLoginPage() {
+        return document.querySelector('.login-container') !== null;
+    }
+
+    isChatPage() {
+        return document.querySelector('.chat-container') !== null;
+    }
+
+    checkAuth() {
+        const savedUser = localStorage.getItem('eChat_user');
+        if (savedUser) {
+            this.currentUser = JSON.parse(savedUser);
         }
 
+        if (this.isLoginPage() && this.currentUser) {
+            window.location.href = 'chat.html';
+        } else if (this.isChatPage() && !this.currentUser) {
+            window.location.href = 'index.html';
+        }
+    }
+
+    async apiCall(endpoint, options = {}) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            this.showError('خطا در ارتباط با سرور');
+            return null;
+        }
+    }
+
+    async login(userData) {
+        const result = await this.apiCall('/api/auth', {
+            method: 'POST',
+            body: JSON.stringify(userData)
+        });
+
+        if (result && result.success) {
+            this.currentUser = result.user;
+            localStorage.setItem('eChat_user', JSON.stringify(this.currentUser));
+            window.location.href = 'chat.html';
+        } else {
+            this.showError(result?.message || 'خطا در ورود');
+        }
+    }
+
+    async loadUserData() {
+        if (!this.currentUser) return;
+        
+        // نمایش اطلاعات کاربر
+        document.getElementById('currentUserName').textContent = this.currentUser.name;
+        document.getElementById('currentUserId').textContent = `@${this.currentUser.userId}`;
+        document.getElementById('currentUserProfilePic').src = this.currentUser.profilePic || DEFAULT_AVATAR;
+    }
+
+    async loadContacts() {
+        const users = await this.apiCall(`/api/users?currentUser=${this.currentUser.phone}`);
+        if (users) {
+            this.contacts = users;
+        }
+    }
+
+    renderContacts() {
+        const contactList = document.getElementById('contactList');
+        contactList.innerHTML = '';
+
+        this.contacts.forEach(contact => {
+            const contactElement = this.createContactElement(contact);
+            contactList.appendChild(contactElement);
+        });
+    }
+
+    createContactElement(contact) {
+        const div = document.createElement('div');
+        div.className = 'contact-item';
+        div.innerHTML = `
+            <img src="${contact.profilePic || DEFAULT_AVATAR}" alt="${contact.name}">
+            <div class="contact-info">
+                <h5>${contact.name}</h5>
+                <small>@${contact.userId}</small>
+            </div>
+            ${contact.userId === 'support' ? '<span class="verified-badge"><i class="fas fa-check-circle"></i></span>' : ''}
+        `;
+
+        div.addEventListener('click', () => this.selectContact(contact));
+        return div;
+    }
+
+    async selectContact(contact) {
+        this.activeContact = contact;
+        this.showChatScreen();
+        await this.loadMessages(contact);
+    }
+
+    async loadMessages(contact) {
+        const messages = await this.apiCall(
+            `/api/messages?user1=${this.currentUser.phone}&user2=${contact.phone}`
+        );
+
+        if (messages) {
+            this.renderMessages(messages);
+        }
+    }
+
+    renderMessages(messages) {
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.innerHTML = '';
+
+        messages.forEach(message => {
+            const messageElement = this.createMessageElement(message);
+            messagesContainer.appendChild(messageElement);
+        });
+
+        this.scrollToBottom();
+    }
+
+    createMessageElement(message) {
+        const div = document.createElement('div');
+        const isSent = message.senderPhone === this.currentUser.phone;
+        
+        div.className = `message ${isSent ? 'sent' : 'received'}`;
+        
+        let content = this.processMessageContent(message.content);
+        if (message.message_type === 'image') {
+            content = `<img src="${message.fileUrl}" alt="تصویر" class="message-image">`;
+            if (message.caption) {
+                content += `<div class="caption">${this.processMessageContent(message.caption)}</div>`;
+            }
+        }
+
+        div.innerHTML = `
+            <div class="message-content">${content}</div>
+            <div class="message-time">${this.formatTime(message.timestamp)}</div>
+            ${isSent ? '<div class="message-status"><i class="fas fa-check-double"></i></div>' : ''}
+        `;
+
+        return div;
+    }
+
+    processMessageContent(content) {
+        // تبدیل @آیدی به لینک
+        content = content.replace(/@(\w+)/g, '<a href="#" class="user-mention" data-user="$1">@$1</a>');
+        
+        // تبدیل لینک‌ها
+        content = content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+        
+        // تبدیل دامنه‌های ساده
+        content = content.replace(/(\w+\.\w{2,})/g, '<a href="http://$1" target="_blank">$1</a>');
+        
+        return content;
+    }
+
+    async sendMessage(content, type = 'text', file = null) {
+        if (!this.activeContact) return;
+
+        const messageData = {
+            senderPhone: this.currentUser.phone,
+            receiverPhone: this.activeContact.phone,
+            content: content,
+            type: type,
+            fileSize: file ? file.size : 0
+        };
+
+        const result = await this.apiCall('/api/messages', {
+            method: 'POST',
+            body: JSON.stringify(messageData)
+        });
+
+        if (result && result.success) {
+            await this.loadMessages(this.activeContact);
+            this.clearMessageInput();
+        } else {
+            this.showError(result?.message || 'خطا در ارسال پیام');
+        }
+    }
+
+    setupEventListeners() {
+        if (this.isLoginPage()) {
+            this.setupLoginListeners();
+        } else if (this.isChatPage()) {
+            this.setupChatListeners();
+        }
+    }
+
+    setupLoginListeners() {
+        const loginForm = document.getElementById('loginForm');
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const userId = document.getElementById('userId').value;
-            const profilePicFile = profilePicInput.files[0];
-
-            const data = db.get();
-            data.currentUser = { name, phone, userId, profilePic: DEFAULT_AVATAR_URL }; // ابتدا با آواتار پیش‌فرض مقداردهی می‌شود
-
-            if (profilePicFile) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    data.currentUser.profilePic = event.target.result; // عکس انتخابی جایگزین می‌شود
-                    db.save(data);
-                    window.location.href = 'chat.html';
-                };
-                reader.readAsDataURL(profilePicFile);
-            } else {
-                db.save(data); // اگر عکسی انتخاب نشد، فقط نام و شماره را ذخیره می‌کند
-                window.location.href = 'chat.html';
-            }
+            this.handleLogin();
         });
     }
 
-    // --- مدیریت صفحه چت ---
-    function handleChatPage() {
-        let data = db.get(); // دریافت آخرین وضعیت دیتابیس
-        let activeContactPhone = null; // شماره تلفن مخاطب فعال
-        let contextMenuContactPhone = null; // شماره تلفن مخاطب برای منوی راست کلیک
-
-        // اگر کاربری لاگین نکرده باشد، به صفحه لاگین هدایت می‌شود
-        if (!data.currentUser) {
-            window.location.href = 'index.html';
-            return;
-        }
-
-        // انتخاب عناصر DOM
-        const chatContainer = document.querySelector('.chat-container');
-        const sidebar = document.querySelector('.sidebar');
-        const chatWindow = document.querySelector('.chat-window');
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        const chatScreen = document.getElementById('chatScreen');
-        const contactListEl = document.getElementById('contactList');
-        const messagesEl = document.getElementById('messages');
+    setupChatListeners() {
         const chatForm = document.getElementById('chatForm');
-        const msgInput = document.getElementById('msg');
-        const fileInput = document.getElementById('fileInput');
-        const captionInput = document.getElementById('captionInput');
-        const contextMenu = document.getElementById('contextMenu');
-        const settingsBtn = document.getElementById('settingsBtn');
-        const settingsModal = document.getElementById('settingsModal');
-        const closeButton = settingsModal.querySelector('.close-button');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const backToContactsBtn = document.getElementById('backToContactsBtn');
-        const settingsForm = document.getElementById('settingsForm'); // اضافه شده برای فرم تنظیمات
-        const settingNameInput = document.getElementById('settingName'); // اضافه شده
-        const settingPhoneInput = document.getElementById('settingPhone'); // اضافه شده
-        const settingUserIdInput = document.getElementById('settingUserId'); // اضافه شده
-        const settingProfilePicInput = document.getElementById('settingProfilePic'); // اضافه شده
-
-        // NEW: اطمینان از اینکه مودال تنظیمات هنگام بارگذاری صفحه پنهان است
-        settingsModal.style.display = 'none';
-
-        // --- منطق منوی راست کلیک ---
-        function showContextMenu(e) {
-            e.preventDefault(); // جلوگیری از منوی راست کلیک پیش‌فرض مرورگر
-            contextMenuContactPhone = e.currentTarget.dataset.phone;
-            contextMenu.style.display = 'block';
-            // موقعیت منو را تنظیم می‌کند تا در کنار اشاره‌گر موس نمایش داده شود
-            // از right استفاده شده چون rtl هستیم
-            contextMenu.style.top = `${e.pageY}px`;
-            contextMenu.style.right = `${window.innerWidth - e.pageX}px`;
-        }
-
-        function hideContextMenu() {
-            contextMenu.style.display = 'none';
-            contextMenuContactPhone = null;
-        }
-        window.addEventListener('click', hideContextMenu); // کلیک در هر جای صفحه منو را می‌بندد
-
-        // رویدادهای مربوط به آیتم‌های منوی راست کلیک
-        document.getElementById('menu-rename').addEventListener('click', () => {
-            const contact = data.contacts.find(c => c.phone === contextMenuContactPhone);
-            if (!contact) return;
-            const newName = prompt("نام جدید را وارد کنید:", contact.name);
-            if (newName && newName.trim()) {
-                contact.name = newName.trim();
-                db.save(data);
-                renderEverything(); // رندر مجدد برای نمایش تغییرات
-            }
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleSendMessage();
         });
 
-        document.getElementById('menu-change-contact-pic').addEventListener('click', () => {
-            const contact = data.contacts.find(c => c.phone === contextMenuContactPhone);
-            if (!contact) return;
-
-            const tempFileInput = document.createElement('input');
-            tempFileInput.type = 'file';
-            tempFileInput.accept = 'image/*';
-            tempFileInput.style.display = 'none'; // مخفی کردن ورودی فایل
-
-            tempFileInput.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        contact.profilePic = event.target.result;
-                        db.save(data);
-                        renderEverything(); // رندر مجدد برای نمایش تغییرات
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-            tempFileInput.click(); // شبیه‌سازی کلیک روی ورودی فایل
-        });
-
-        document.getElementById('menu-delete-messages').addEventListener('click', () => {
-            if (confirm(`آیا از حذف تمام پیام‌های این مخاطب مطمئن هستید؟`)) {
-                data.messages[contextMenuContactPhone] = []; // حذف پیام‌ها
-                db.save(data);
-                if (activeContactPhone === contextMenuContactPhone) {
-                    renderMessages(activeContactPhone); // اگر این مخاطب فعال است، پیام‌ها را رندر کن
-                }
-            }
-        });
-
-        document.getElementById('menu-mark-read').addEventListener('click', () => {
-             // این تابع در حال حاضر فقط یک پیام نمایش می‌دهد، می‌توانید منطق واقعی را اضافه کنید
-             alert("پیام‌ها خوانده شده در نظر گرفته شدند.");
-             // برای اعمال تغییرات واقعی:
-             // const chatHistory = data.messages[contextMenuContactPhone] || [];
-             // chatHistory.forEach(msg => {
-             //     if (msg.type === 'received') msg.status = 'read';
-             // });
-             // db.save(data);
-             // renderEverything();
-        });
-
-        document.getElementById('menu-delete-contact').addEventListener('click', () => {
-            if (confirm(`آیا از حذف این مخاطب مطمئن هستید؟`)) {
-                data.contacts = data.contacts.filter(c => c.phone !== contextMenuContactPhone); // حذف مخاطب
-                delete data.messages[contextMenuContactPhone]; // حذف تاریخچه چت مخاطب
-                db.save(data);
-                if (activeContactPhone === contextMenuContactPhone) {
-                    activeContactPhone = null; // اگر مخاطب حذف شده، چت فعال را پاک کن
-                }
-                renderEverything(); // رندر مجدد برای نمایش تغییرات
-            }
-        });
-
-        // --- منطق رندر کردن UI ---
-        function renderContacts() {
-            contactListEl.innerHTML = ''; // پاک کردن لیست مخاطبین فعلی
-            data.contacts.forEach(contact => {
-                const contactDiv = document.createElement('div');
-                contactDiv.className = 'contact-item';
-                contactDiv.dataset.phone = contact.phone;
-                if (contact.phone === activeContactPhone) contactDiv.classList.add('active'); // هایلایت کردن مخاطب فعال
-
-                contactDiv.innerHTML = `<img src="${contact.profilePic || DEFAULT_AVATAR_URL}" alt="${contact.name}">
-                    <div class="contact-info"><h5>${contact.name}</h5><small>${contact.phone}</small></div>`;
-
-                contactDiv.addEventListener('click', () => {
-                    activeContactPhone = contact.phone;
-                    // پیام‌های دریافتی را به عنوان خوانده شده علامت‌گذاری می‌کند
-                    const chatHistory = data.messages[activeContactPhone] || [];
-                    chatHistory.forEach(msg => {
-                        if (msg.type === 'received') msg.status = 'read';
-                    });
-                    db.save(data);
-                    renderEverything(); // رندر مجدد کل UI برای نمایش چت فعال
-
-                    // برای حالت موبایل: مخفی کردن سایدبار و نمایش پنجره چت
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.add('hidden');
-                        chatWindow.classList.add('active');
-                    }
-                });
-
-                contactDiv.addEventListener('contextmenu', showContextMenu); // افزودن رویداد راست کلیک
-                contactListEl.appendChild(contactDiv);
-            });
-        }
-
-        function renderMessages(phone) {
-            messagesEl.innerHTML = ''; // پاک کردن پیام‌های فعلی
-            const chatHistory = data.messages[phone] || [];
-            chatHistory.forEach(appendMessage); // اضافه کردن تک تک پیام‌ها
-            messagesEl.scrollTop = messagesEl.scrollHeight; // اسکرول به پایین
-        }
-
-        function appendMessage(msg) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', msg.type); // اضافه کردن کلاس sent یا received
-
-            let contentHTML = '';
-            if (msg.fileContent) { // اگر پیام شامل فایل است
-                contentHTML = `<img src="${msg.fileContent}" alt="Sent image" />`;
-                if (msg.caption) {
-                    contentHTML += `<span class="caption">${msg.caption}</span>`;
-                }
-            } else { // اگر پیام فقط متن است
-                contentHTML = msg.text;
-            }
-
-            let ticksHTML = '';
-            if (msg.type === 'sent') { // فقط برای پیام‌های ارسالی تیک نمایش داده می‌شود
-                let tickClass = '';
-                switch (msg.status) {
-                    case 'read': tickClass = 'icon-read'; break;
-                    case 'delivered': tickClass = 'icon-delivered'; break;
-                    default: tickClass = 'icon-sent';
-                }
-                ticksHTML = `<div class="message-meta"><div class="message-ticks ${tickClass}"></div></div>`;
-            }
-
-            messageDiv.innerHTML = `<div>${contentHTML}</div>${ticksHTML}`;
-            messagesEl.appendChild(messageDiv);
-            messagesEl.scrollTop = messagesEl.scrollHeight; // اسکرول به پایین بعد از هر پیام
-        }
-
-        // تابع اصلی رندرینگ که کل UI را به‌روز می‌کند
-        function renderEverything() {
-            data = db.get(); // همیشه آخرین داده‌ها را برای رندر دریافت می‌کند
-            if (activeContactPhone) {
-                const contact = data.contacts.find(c => c.phone === activeContactPhone);
-                // اگر مخاطب فعال حذف شده باشد، activeContactPhone را null می‌کند
-                if (!contact) {
-                    activeContactPhone = null;
-                    renderEverything(); // فراخوانی مجدد برای نمایش صفحه خوش‌آمدگویی
-                    return;
-                }
-
-                welcomeScreen.style.display = 'none';
-                chatScreen.style.display = 'flex'; // نمایش صفحه چت
-                // NEW: بروزرسانی اطلاعات مخاطب در هدر چت
-                document.getElementById('chattingWith').textContent = contact.name;
-                document.getElementById('contactProfilePic').src = contact.profilePic || DEFAULT_AVATAR_URL;
-                renderMessages(activeContactPhone); // رندر پیام‌های مخاطب فعال
-            } else {
-                chatScreen.style.display = 'none'; // پنهان کردن صفحه چت
-                welcomeScreen.style.display = 'flex'; // نمایش صفحه خوش‌آمدگویی
-                // برای حالت موبایل: اگر چت فعال نیست، سایدبار را نمایش بده
-                if (window.innerWidth <= 768) {
-                     sidebar.classList.remove('hidden');
-                     chatWindow.classList.remove('active');
-                }
-            }
-            renderContacts(); // رندر لیست مخاطبین
-            // بروزرسانی اطلاعات کاربر فعلی در سایدبار
-            document.getElementById('currentUserName').textContent = data.currentUser.name;
-            document.getElementById('currentUserProfilePic').src = data.currentUser.profilePic || DEFAULT_AVATAR_URL;
-        }
-
-        // --- منطق پاسخ هوش مصنوعی ---
-        function generateAIResponse(userMessage) {
-            const lowerCaseMsg = userMessage.toLowerCase();
-            if (lowerCaseMsg.includes('سلام') || lowerCaseMsg.includes('درود')) {
-                return 'سلام! حال شما چطوره؟';
-            } else if (lowerCaseMsg.includes('خوبی؟') || lowerCaseMsg.includes('چطوری؟')) {
-                return 'من خوبم ممنون! شما چطورید؟';
-            } else if (lowerCaseMsg.includes('اسمت چیه؟') || lowerCaseMsg.includes('کی هستی؟')) {
-                return 'من یک هوش مصنوعی هستم و اسمی ندارم. من توسط شما ساخته شدم!';
-            } else if (lowerCaseMsg.includes('ممنون') || lowerCaseMsg.includes('متشکرم')) {
-                return 'خواهش می‌کنم!';
-            } else if (lowerCaseMsg.includes('خدانگهدار') || lowerCaseMsg.includes('بای') || lowerCaseMsg.includes('به امید دیدار')) {
-                return 'خدانگهدار! روز خوبی داشته باشید.';
-            } else if (lowerCaseMsg.includes('ساعت چنده؟')) {
-                const now = new Date();
-                return `ساعت الان ${now.getHours()}:${now.getMinutes()} هست.`;
-            } else if (lowerCaseMsg.includes('تاریخ چنده؟')) {
-                const now = new Date();
-                return `امروز ${now.toLocaleDateString('fa-IR')} هست.`;
-            } else if (lowerCaseMsg.includes('کمک')) {
-                return 'چطور میتونم کمکتون کنم؟';
-            } else if (lowerCaseMsg.includes('چرا جواب نمیدی؟')) {
-                return 'چته خب. دارم جواب میدم دیگه!'
-            } else if (lowerCaseMsg.includes('آی قلبم. وای قلبم. آی قلبم. واییی قلبم')) {
-                return 'قلبت چشه؟ اصلا به من چه!'
-            } else if (lowerCaseMsg.includes('بی ادب')) {
-                return 'خودت بی ادبی بی ...'
-            }
-            return 'متاسفانه پیام شما را متوجه نشدم. لطفا واضح‌تر بگویید.';
-        }
-
-
-        // --- رویدادهای اصلی ---
-
-        // افزودن مخاطب جدید
         document.getElementById('addContactBtn').addEventListener('click', () => {
-            const name = prompt("نام مخاطب:");
-            const phone = prompt("شماره تلفن مخاطب (مثال: 09123456789):");
-            const phoneRegex = /^09[0-9]{9}$/;
-            if (name && phone && phoneRegex.test(phone)) {
-                if (data.contacts.some(c => c.phone === phone)) {
-                    alert("مخاطبی با این شماره تلفن از قبل وجود دارد.");
-                    return;
-                }
-                data.contacts.push({ name, phone, profilePic: DEFAULT_AVATAR_URL });
-                db.save(data);
-                renderContacts(); // فقط لیست مخاطبین را رندر کن
-            } else if (name || phone) {
-                alert("لطفا نام و شماره تلفن معتبر (مثال: 09123456789) را وارد کنید.");
-            }
+            this.showAddContactModal();
         });
 
-        // نمایش/پنهان کردن کادر کپشن برای فایل
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) {
-                captionInput.style.display = 'block';
-            } else {
-                captionInput.style.display = 'none';
-                captionInput.value = '';
-            }
+        document.getElementById('backToContactsBtn').addEventListener('click', () => {
+            this.hideChatScreen();
         });
 
-        // ارسال پیام یا فایل
-        chatForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const text = msgInput.value.trim();
-            const caption = captionInput.value.trim();
-            const file = fileInput.files[0];
-
-            if (!activeContactPhone || (!text && !file)) return; // اگر مخاطبی انتخاب نشده یا پیام و فایلی نیست، ارسال نکن
-
-            let fileContent = null;
-            if (file) {
-                fileContent = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (event) => resolve(event.target.result);
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            const message = {
-                id: Date.now(),
-                type: 'sent',
-                text: text,
-                fileContent: fileContent,
-                caption: caption,
-                status: 'sent', // وضعیت اولیه
-                timestamp: new Date().toISOString()
-            };
-
-            if (!data.messages[activeContactPhone]) data.messages[activeContactPhone] = [];
-            data.messages[activeContactPhone].push(message);
-            db.save(data);
-            appendMessage(message); // بلافاصله پیام کاربر را نمایش بده
-
-            // پاک کردن فیلدها
-            msgInput.value = '';
-            fileInput.value = '';
-            captionInput.value = '';
-            captionInput.style.display = 'none';
-
-            // شبیه‌سازی تحویل پیام (مثال: تیک دوم)
-            setTimeout(() => {
-                const currentData = db.get(); // آخرین وضعیت دیتابیس را برای به‌روزرسانی بگیر
-                const msgToUpdate = currentData.messages[activeContactPhone].find(m => m.id === message.id);
-                if (msgToUpdate) {
-                    msgToUpdate.status = 'delivered';
-                    db.save(currentData);
-                    renderEverything(); // رندر مجدد برای نمایش تیک دوم
-                }
-            }, 1000 + Math.random() * 500);
-
-            // شبیه‌سازی پاسخ از طرف هوش مصنوعی
-            setTimeout(() => {
-                const aiMessageText = text || (file ? 'یک فایل ارسال شد' : ''); // اگر متنی نبود و فایل بود
-                const replyText = generateAIResponse(aiMessageText); // فراخوانی تابع هوش مصنوعی
-                const replyMessage = {
-                    id: Date.now() + 1,
-                    type: 'received',
-                    text: replyText,
-                    status: 'sent', // وضعیت پیام دریافتی (می‌توانید 'read' یا 'received' هم بگذارید)
-                    timestamp: new Date().toISOString()
-                };
-                const updatedData = db.get(); // آخرین وضعیت دیتابیس را برای اضافه کردن پیام AI بگیر
-                if (!updatedData.messages[activeContactPhone]) updatedData.messages[activeContactPhone] = [];
-                updatedData.messages[activeContactPhone].push(replyMessage);
-                db.save(updatedData);
-                appendMessage(replyMessage); // بلافاصله پیام AI را نمایش بده
-                // نیازی به renderEverything() نیست چون appendMessage اسکرول می‌کند.
-            }, 2000 + Math.random() * 1500); // تاخیر تصادفی برای طبیعی‌تر شدن
+        // جستجو در مخاطبین
+        document.getElementById('searchContacts').addEventListener('input', (e) => {
+            this.filterContacts(e.target.value);
         });
-
-        // --- رویدادهای مودال تنظیمات ---
-        settingsBtn.addEventListener('click', () => {
-            // پر کردن فیلدهای فرم با اطلاعات فعلی کاربر
-            settingNameInput.value = data.currentUser.name;
-            settingPhoneInput.value = data.currentUser.phone;
-            settingUserIdInput.value = data.currentUser.userId;
-            settingProfilePicInput.value = ''; // خالی کردن فیلد انتخاب فایل برای هر بار باز شدن
-
-            settingsModal.style.display = 'flex'; // نمایش مودال (به صورت فلکس برای مرکزیت)
-        });
-
-        closeButton.addEventListener('click', () => {
-            settingsModal.style.display = 'none'; // مخفی کردن مودال
-        });
-
-        // بستن مودال با کلیک در خارج از آن
-        window.addEventListener('click', (event) => {
-            if (event.target == settingsModal) {
-                settingsModal.style.display = 'none';
-            }
-        });
-
-        // ذخیره تغییرات تنظیمات
-        settingsForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const newName = settingNameInput.value.trim();
-            const newPhone = settingPhoneInput.value.trim();
-            const newUserId = settingUserIdInput.value.trim();
-            const newProfilePicFile = settingProfilePicInput.files[0];
-
-            const phoneRegex = /^09[0-9]{9}$/;
-            if (!newName || !newPhone || !newUserId || !phoneRegex.test(newPhone)) {
-                alert("لطفاً تمامی فیلدها را با اطلاعات معتبر پر کنید (شماره تلفن مثال: 09123456789).");
-                return;
-            }
-
-            // به‌روزرسانی اطلاعات کاربر
-            data.currentUser.name = newName;
-            data.currentUser.phone = newPhone;
-            data.currentUser.userId = newUserId;
-
-            if (newProfilePicFile) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    data.currentUser.profilePic = event.target.result;
-                    db.save(data);
-                    alert("تغییرات با موفقیت ذخیره شد!");
-                    settingsModal.style.display = 'none'; // مخفی کردن مودال
-                    renderEverything(); // رندر مجدد صفحه برای نمایش اطلاعات جدید کاربر
-                };
-                reader.readAsDataURL(newProfilePicFile);
-            } else {
-                db.save(data);
-                alert("تغییرات با موفقیت ذخیره شد!");
-                settingsModal.style.display = 'none'; // مخفی کردن مودال
-                renderEverything(); // رندر مجدد صفحه
-            }
-        });
-
-        // خروج از حساب کاربری
-        logoutBtn.addEventListener('click', () => {
-             if(confirm("آیا میخواهید از حساب خود خارج شوید؟")) {
-                 localStorage.removeItem('chatAppLocalDB_v2'); // پاک کردن داده‌ها از localStorage
-                 window.location.href = 'index.html'; // برگشت به صفحه لاگین
-             }
-        });
-
-        // دکمه بازگشت برای حالت موبایل (از صفحه چت به لیست مخاطبین)
-        backToContactsBtn.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('hidden'); // نمایش سایدبار
-                chatWindow.classList.remove('active'); // مخفی کردن پنجره چت
-                activeContactPhone = null; // پاک کردن مخاطب فعال
-                renderEverything(); // رندر مجدد (که باعث نمایش صفحه خوش‌آمدگویی می‌شود)
-            }
-        });
-
-        // اولین اجرای برنامه هنگام بارگذاری صفحه
-        renderEverything();
     }
+
+    async handleLogin() {
+        const formData = new FormData(document.getElementById('loginForm'));
+        const userData = {
+            name: formData.get('name'),
+            phone: formData.get('phone'),
+            userId: formData.get('userId'),
+            password: formData.get('password')
+        };
+
+        const profilePicFile = document.getElementById('profilePic').files[0];
+        if (profilePicFile) {
+            userData.profilePic = await this.fileToBase64(profilePicFile);
+        }
+
+        await this.login(userData);
+    }
+
+    async handleSendMessage() {
+        const messageInput = document.getElementById('msg');
+        const content = messageInput.value.trim();
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (content || file) {
+            await this.sendMessage(content, file ? 'image' : 'text', file);
+        }
+    }
+
+    showChatScreen() {
+        document.getElementById('welcomeScreen').style.display = 'none';
+        document.getElementById('chatScreen').style.display = 'flex';
+        
+        document.getElementById('chattingWith').textContent = this.activeContact.name;
+        document.getElementById('contactUserId').textContent = `@${this.activeContact.userId}`;
+        document.getElementById('contactProfilePic').src = this.activeContact.profilePic || DEFAULT_AVATAR;
+    }
+
+    hideChatScreen() {
+        document.getElementById('chatScreen').style.display = 'none';
+        document.getElementById('welcomeScreen').style.display = 'flex';
+        this.activeContact = null;
+    }
+
+    showAddContactModal() {
+        // پیاده‌سازی مودال افزودن مخاطب
+        const userId = prompt('آیدی مخاطب را وارد کنید:');
+        if (userId) {
+            this.addContactByUserId(userId);
+        }
+    }
+
+    async addContactByUserId(userId) {
+        // این تابع نیاز به پیاده‌سازی endpoint جداگانه دارد
+        this.showError('این قابلیت به زودی اضافه خواهد شد');
+    }
+
+    filterContacts(searchTerm) {
+        const contacts = document.querySelectorAll('.contact-item');
+        contacts.forEach(contact => {
+            const name = contact.querySelector('h5').textContent.toLowerCase();
+            const userId = contact.querySelector('small').textContent.toLowerCase();
+            const search = searchTerm.toLowerCase();
+            
+            if (name.includes(search) || userId.includes(search)) {
+                contact.style.display = 'flex';
+            } else {
+                contact.style.display = 'none';
+            }
+        });
+    }
+
+    scrollToBottom() {
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    clearMessageInput() {
+        document.getElementById('msg').value = '';
+        document.getElementById('fileInput').value = '';
+    }
+
+    formatTime(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString('fa-IR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    async fileToBase64(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    showError(message) {
+        const errorElement = document.getElementById('error-message') || 
+                           this.createErrorElement();
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        
+        setTimeout(() => {
+            errorElement.style.display = 'none';
+        }, 5000);
+    }
+
+    createErrorElement() {
+        const div = document.createElement('div');
+        div.id = 'error-message';
+        div.style.cssText = 'color: red; display: none; margin-top: 10px;';
+        document.querySelector('form').appendChild(div);
+        return div;
+    }
+}
+
+// راه‌اندازی برنامه
+document.addEventListener('DOMContentLoaded', () => {
+    window.eChat = new EChat();
 });

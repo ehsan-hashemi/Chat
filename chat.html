@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>چت روم حرفه‌ای</title>
+    <title>eChat - پیامرسان حرفه‌ای</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="icon" href="/icon.png" type="image/png">
 </head>
 <body>
     <div class="chat-container">
@@ -13,78 +14,85 @@
             <div class="sidebar-header">
                 <div class="user-profile">
                     <img id="currentUserProfilePic" src="" alt="You">
-                    <h4 id="currentUserName"></h4>
+                    <div class="user-info">
+                        <h4 id="currentUserName"></h4>
+                        <small id="currentUserId"></small>
+                    </div>
                 </div>
-                <button id="addContactBtn" title="افزودن مخاطب"><i class="fas fa-plus"></i></button>
-                <button id="settingsBtn" title="تنظیمات"><i class="fas fa-cog"></i></button>
+                <div class="header-buttons">
+                    <button id="addContactBtn" title="افزودن مخاطب"><i class="fas fa-user-plus"></i></button>
+                    <button id="settingsBtn" title="تنظیمات"><i class="fas fa-cog"></i></button>
+                </div>
             </div>
+            
+            <div class="search-container">
+                <input type="text" id="searchContacts" placeholder="جستجو در مخاطبین...">
+                <i class="fas fa-search"></i>
+            </div>
+            
             <div id="contactList" class="contact-list">
-                </div>
+                <!-- لیست مخاطبین -->
+            </div>
         </div>
 
         <div class="chat-window">
             <div id="welcomeScreen" class="welcome-screen">
-                <h2>به چت‌روم خوش آمدید!</h2>
-                <p>برای شروع یک مخاطب را از لیست انتخاب کنید.</p>
+                <img src="/icon.png" alt="eChat" class="welcome-logo">
+                <h2>به eChat خوش آمدید!</h2>
+                <p>برای شروع گفتگو، یک مخاطب را از لیست انتخاب کنید.</p>
             </div>
+            
             <div id="chatScreen" class="chat-screen" style="display: none;">
                 <div class="chat-header">
                     <button id="backToContactsBtn" class="back-button"><i class="fas fa-arrow-right"></i></button>
                     <img id="contactProfilePic" src="" alt="">
-                    <h3 id="chattingWith"></h3>
-                </div>
-                <div id="messages" class="messages">
+                    <div class="contact-info">
+                        <h3 id="chattingWith"></h3>
+                        <small id="contactUserId"></small>
                     </div>
+                    <div class="chat-actions">
+                        <button id="callBtn" title="تماس صوتی"><i class="fas fa-phone"></i></button>
+                        <button id="videoCallBtn" title="تماس تصویری"><i class="fas fa-video"></i></button>
+                        <button id="infoBtn" title="اطلاعات مخاطب"><i class="fas fa-info-circle"></i></button>
+                    </div>
+                </div>
+                
+                <div id="messages" class="messages">
+                    <!-- پیام‌ها -->
+                </div>
+                
                 <div class="chat-form-container">
                     <form id="chatForm">
-                        <input id="msg" type="text" placeholder="پیام خود را بنویسید..." autocomplete="off">
-                        <input type="text" id="captionInput" placeholder="کپشن (اختیاری)..." style="display: none;">
-                        <label for="fileInput" class="attach-btn"><i class="fas fa-paperclip"></i></label>
-                        <input type="file" id="fileInput" style="display: none;" accept="image/*">
-                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                        <div class="input-container">
+                            <input id="msg" type="text" placeholder="پیام خود را بنویسید..." autocomplete="off">
+                            <div class="chat-buttons">
+                                <label for="fileInput" class="attach-btn" title="ارسال فایل">
+                                    <i class="fas fa-paperclip"></i>
+                                </label>
+                                <input type="file" id="fileInput" style="display: none;" accept="image/*,video/*,.pdf,.doc,.docx">
+                                <button type="submit" class="send-btn">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
                     </form>
+                    <div class="storage-info">
+                        <span id="storageUsed">0</span> از ۲۰ مگابایت استفاده شده
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="contextMenu" class="context-menu">
-        <ul>
-            <li id="menu-rename">تغییر نام</li>
-            <li id="menu-change-contact-pic">تغییر عکس پروفایل</li>
-            <li id="menu-delete-messages">حذف پیام‌ها</li>
-            <li id="menu-mark-read">علامت زدن به عنوان خوانده شده</li>
-            <li id="menu-delete-contact" class="danger">حذف مخاطب</li>
-        </ul>
-    </div>
-
-    <div id="settingsModal" class="modal">
+    <!-- مودال افزودن مخاطب -->
+    <div id="addContactModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2>تنظیمات حساب کاربری</h2>
-            <form id="settingsForm" class="settings-form">
-                <div class="form-group">
-                    <label for="settingName">نام:</label>
-                    <input type="text" id="settingName" required>
-                </div>
-                <div class="form-group">
-                    <label for="settingPhone">شماره تلفن:</label>
-                    <input type="tel" id="settingPhone" pattern="09[0-9]{9}" required>
-                </div>
-                <div class="form-group">
-                    <label for="settingUserId">آیدی کاربری:</label>
-                    <input type="text" id="settingUserId" required>
-                </div>
-                <div class="form-group">
-                    <label for="settingProfilePic">عکس پروفایل:</label>
-                    <input type="file" id="settingProfilePic" accept="image/*">
-                    <p style="font-size: 0.8rem; color: #888; margin-top: 5px;">اگر عکسی انتخاب نشود، از عکس پیش‌فرض استفاده می‌شود.</p>
-                </div>
-                <button type="submit" id="saveSettingsBtn">ذخیره تغییرات</button>
+            <h2>افزودن مخاطب جدید</h2>
+            <form id="addContactForm">
+                <input type="text" id="contactUserId" placeholder="آیدی مخاطب (مثال: my_friend)" required>
+                <button type="submit">افزودن مخاطب</button>
             </form>
-            <div class="settings-options">
-                <button id="logoutBtn" class="danger">خروج از حساب</button>
-            </div>
         </div>
     </div>
 
